@@ -48,6 +48,6 @@ setup(name='python-fsm',
       url='https://github.com/oozie/python-fsm',
       download_url='http://python-fsm.googlecode.com/files/python-fsm-%s.tar.gz' % __version__,
       package_dir={'': 'src'},
-      py_modules=['fsm'],
+      py_modules=['fsm','ktail','State'],
      )
 

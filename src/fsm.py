@@ -32,25 +32,36 @@ Overview of classes:
         a value assigned to the transition cause by the input value.
     http://en.wikipedia.org/wiki/Mealy_machine
 """
+import sys
+import os.path
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+#from State import State,FSMError,MACHINES
 
 __version__ = '0.01'
 
-MACHINES = dict()
+#MACHINES = dict()
 
+#NOOP = lambda: None
+#NOOP_ARG = lambda arg: None
+
+MACHINES = dict()
 NOOP = lambda: None
 NOOP_ARG = lambda arg: None
-
 
 class FSMError(Exception):
     """Base FSM exception."""
     pass
 
+class StateError(FSMError):
+    """State manipulation error."""
+
+
 class TransitionError(FSMError):
     """Transition exception."""
     pass
 
-class StateError(FSMError):
-    """State manipulation error."""
+
 
 
 class FiniteStateMachine(object):
@@ -175,14 +186,16 @@ class MealyMachine(Transducer):
         """Return output for a given state transition."""
         return dict(self.current_state.output_values).get(input_value)
 
-
+   
 class State(dict):
     
     """State class."""
 
     DOT_ATTRS = {
         'shape': 'circle',
-        'height': '1.2',
+        'height': '0.2',
+        'fillcolor':'white', 
+        'URL':"0659071e-1849-4616-a11a-e98edfe86e24"
     }
     DOT_ACCEPTING = 'doublecircle'
 
@@ -238,6 +251,7 @@ class State(dict):
     def __repr__(self):
         """Represent the object in a string."""
         return '<%r %s @ 0x%x>' % (self.name, self.__class__.__name__, id(self))
+
 
 
 def get_graph(fsm, title=None):
