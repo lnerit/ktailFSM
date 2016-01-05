@@ -1,0 +1,849 @@
+Zorba - The XQuery Processor
+
+
+version 2.9
+
+New Features:
+  * A new common-language mode has been added to help write code that is 
+    compatible with both Zorba's extended XQuery and JSONiq languages. It will 
+    raise warnings for code that is not conformant to the common subset.
+  * Typeswitch expression extended to allow union of types in each case clause,
+    as specified by XQuery v3.0
+  * In C++ API, added optional XML formatting of exceptions.
+  * Bind zerr:line-number-end and zerr:column-number-end variables in the body
+    of a catch clause.
+  * New C++ and XQuery function (see module http://www.zorba-xquery.com/modules/item)
+    to estimate the size an item allocates in memory.
+  * Extended sequence types to include unions, as specified by XQuery v3.0
+  * Added XQuery::parse(std::istream& aQuery, ModuleInfo_t& aResult) function.
+  * In store API, added ability to specify a stream's originating URI (file)
+    for streamable strings and base64Binary.
+  * Added millis-to-dateTime() function in datetime module.
+  * Added setCalendar(), getCalendar(), setLocale(), and getLocale() to
+    DynamicContext class in C++ API.
+  * fn:trace outputs "empty-sequence()" if the input is the empty-sequence.
+  * Allow multiple default function namespaces.
+  * Implemented computed namespace constructors and namespace-node() kindTest.
+  * $array() => jn:members($array), $object() => jn:keys($object)
+  * Added xqxq:variable-value function.
+  * Added canonicalize function to modules/xml.
+  * Added support for xs:dateTimeStamp type from XMLSchema 1.1, bug #924754.
+  * Implemented resolution of module-import cycles according to the W3C XQuery 3.0 spec.
+  * Added uri:parse() and uri:serialize() functions to URI module for
+    parsing URI into components and forming URIs from components.
+  * Added support for the standardized require-feature and prohibit-feature
+    options.
+  * Implemented higher order functions (function items, partial and dynamic
+    function invocation, and related fn library functions).
+
+Optimizations:
+  * Extended optimization rules for subsequence function (pushing $startingLoc
+    parameter into collection skip if $sourceSeq parameter is from a
+    collection).
+  * Introduced generic framework for optimizing fn:count() during runtime:
+    Virtual PlanIterator::count() method provides the base (unoptimized)
+    implementation of fn:count(). This base method is redefined by other plan
+    iterators who have a way of returning the cardinality of their result
+    sequence without actually computing the full result sequence.
+  * Optimized fn:index-of function
+  * Extented index join  rule to general flwor expressions. 
+
+Bug Fixes/Other Changes:
+  * Fixed bug #1176038 (memory error in parser revealed by Bison 2.7)
+  * Fixed bug #1102997 (Swapping referenced nodes)
+  * Fixed bug #1169908 (Zorba hangs with invalid utf-8 input)
+  * Fixed bug #1111487 (Swapping nodes that are in collections)
+  * Fixed bug #1083006 (subsequence: large input values)
+  * Fixed bug #1123836 (overflows in date/time casts now return FODT0001 and
+    in durations return FODT0002)
+  * Fixed bug #1147518 (fn:round-half-to-even (at least 11 failures))
+  * Fixed bug #1167704 (Implement [w] for ISO calendars for format-date/time functions)
+  * Fixed bug #1114228 (unrecognized options in the XQuery namespace now raise an error)
+  * Fixed bug #1124273 (xqdoc crash because of annotation literals)
+  * Fixed bug #1175752 ("format-date-en152" and "format-dateTime-en152" failing)
+  * Fixed bug #1085408 (xs:date(): casting large year values)
+  * Fixed bug #867027 (XQST0059 error messages inconsistent)
+  * Fixed fn:nilled function
+  * Fixed bug concerning nillability during sequence type matching.
+  * Fixed bug in handling the type declaration of a FOR variable that allows empty.
+  * Fixed bug in casting to normalizedString.
+  * Fixed bug #1095889 (Improve error message for xml-parsing error).
+  * Fixed bug #1131984 (apparently invalid regex in queries)
+  * Fixed bug #1123163 (fn:format-integer failures)
+  * Fixed bug in index join rule (no index join if inner clause has positional var).
+  * Fixed bug in index join rule (copy var ids after cloning index domain expr).
+  * Fixed bug #1131988 (re00732 fails)
+  * Fixed bug in handling the type declaration of a window variable.
+  * Fixed bug #1131990 (re00737 fails)
+  * Fixed bug #1123162 (FOTS: formatting dates and times failures)
+  * Added missing wrapper expressions around some variable references.
+  * Fixed optimizer bug: elimination of positional variable sometimes caused
+    elimination of whole FOR clause.
+  * Fixed bug in the throwing of error XQTY0086 during node construction.
+  * Fixed bug #1148335 (where-clause expression was not always reset when it should be)
+  * Fixed bug #1122396 (Associate origin/destination URI to I/O stream)
+  * Fixed bug #1111786 (xml/json parse error location in catch clause).
+  * Fixed bug #1153800 (construct hexBinary without encoding the data)
+  * Fixed bug #1076402 (bug in CastIterator when target is QName)
+  * NaN items are considered equal to each other during grouping
+  * Fixed bug #855481 (Too small time types on Windows).
+  * Fixed bug #1154984 (windows build crashes if a vector iterator is reused
+    after it is used to erase an element of the vector)
+  * Fixed bug #1132032 (Certain regexes involving ^ should be legal)
+  * Fixed bug #1023168 (Non-single-char-escapes in regex character ranges not
+    caught)
+  * Throw XQST0048 for groupby clause, as specified by XQuery 3.0.
+  * Fixed bug #1064289 (file module cannot delete broken symbolic links)
+  * Fixed bug in raising XQTY0086 (copying of namespace-sensitive values during
+    node construction).
+  * Fixed bug #866874 (regex "range subtraction" not supported for ICU)
+  * Fixed bug in computing the static type of an allowing-empty FOR variable.
+  * Fixed bug #1099648 and #1088886 (XML parsing failures on Red Hat)
+  * Fixed bug #1131985 (\p{IsPrivateUse} in regex may not be working)
+  * Fixed bug #1099535  (xml:parse endless loop)
+  * Fixed bug in optimizing fn:count over general-index probes
+  * Fixed bug #866958  (Parsing error not explicit enough)
+  * Fixed bug #1123164 (fn:format-number failures (at least 19))
+  * Fixed memory leak in temp sequence
+  * Fixed bug in computing the static type of a self-axis path step.
+  * Fixed bug #867068: (Incorrect usage of XQDY0027)
+  * Fixed bug: jsoniq constructor should not be const-folded
+  * Fixed bug #866958 (Parsing error not explicit enough)
+  * Fixed bug #1152834 (bug in computing the scripting kind of array and object
+    constructor exprs)
+  * Fixed bug #1125444 (input group-by exprs were not treated by index-flwor_vars()
+    function, leading to erroneous loop hoisting).
+  * Raise XQST0046, if needed, from namespace declaration attribute inside
+    direct element constructor.
+  * Fixed bug #1023362 (xsi:type attribute ignored during validation)
+  * Fixed bug #1025564 (Deprecate -f argument to zorbacmd)
+  * Fixed bug #1082740 (support for INF and -INF values in fn:subsequence function).
+  * Fixed bug #1015468 (wrong result from fn:resolve-uri())
+
+
+version 2.8
+
+New Features:
+  * New external module for interfacing with Couchbase Server.
+  * New external module for interfacing with SQLite Database.
+  * New external module for interfacing with Oracle NoSQL Database.
+  * New external module for interfacing with relational databases via JDBC.
+  * New external info-extraction module for querying concepts and entities in
+    natural language text.
+  * New built-in module to (de)reference XML nodes or JSON objects and
+    arrays that are stored in a collection
+  * Implemented JSONiq's json-doc() function.
+  * http-uri-resolution feature to disable HTTP when resolving URIs.
+  * Option to specify that parse-json() strips the top-level array.
+  * Extended cast and castable expression to allow any simple target type
+    (as specified by XQuery 3.0).
+  * The XQXQ (XQuery-for-XQuery) module became part of the Zorba core.
+  * The datetime module became part of the Zorba core.
+  * In the datetime module, added parse-date(), parse-dateTime(), parse-time(),
+    and utc-offset().
+  * Includes test driver for W3C XQuery 3.0 Test Suite (aka FOTS).
+
+Optimizations:
+  * Various optimizations in the implementation of the optimizer rules.
+  * Better computation of the static type for global variables.
+  * Optimization of comparison operators when untypedAtomic items are involved.
+  * Improved computation of static type for fn:data function.
+  * Fixed iteration over the components of a window clause; this improves static
+    type computation of expressions referencing window vars.
+  * No need to cast xs:untypedAtomic to xs:string in order-by expression.
+  * Convert LET variables whose domain sequence has exactly one item to FOR
+    vars.
+
+Bug Fixes/Other Changes:
+  * Fixed bug #949064  (faulty QName should be printed in the error message)
+  * Fixed bug #1072644 (broken parser error location)
+  * Fixed bug #868640 (Node lifetime is shorter than expected due to let
+    variable inlining)
+  * Fixed bugs #1081626 (Segmentation fault in a side-effecting FLWOR),
+    #1079488 (streaming segfault)
+  * Fixed bug #1062093 (bug in var reference iterators with an associated
+    position that is negative)
+  * Fixed bug #1073978 (FOTS: option default ns not supported)
+  * Fixed bug #1061222 (bad message for errors in index key type declaration)
+  * Fixed bug #1065175 (preceding::node()[1] returns wrong results)
+  * Fixed bug #1065321 (following:text() doesn't return results in doc order)
+  * Fixed bug #1067706 (wrong const folding in mutually recursive udfs)
+  * Fixed bug #1021492 (while computing the "sources" of a prolog var, skip any
+    var-setting exprs that appear in non-used (and non-optimized) functions).
+  * Fixed bug #1070551 (zerr:ZOSE0003 stream read failure)
+  * Fixed bug #992304 (Compiling library modules could load data from wrong
+    source).
+  * Fixed bug #1043294 (XQST0036 not used in XQuery 3.0).
+  * Fixed bug in castable expr when the target type is xs:QName.
+  * Fixed bug in testing if a sequence type is subtype of node(xs:untyped)
+  * Fixed mustCopyInputNodes() method of no-copy, and jsoniq functions.
+  * Fixed bugs related to casting to user-defined types.
+
+
+version 2.7
+
+New Features:
+  * XQuery 3.0 simple map operator http://www.w3.org/TR/xquery-30/#id-map-operator
+  * Copy function added to the node module
+  * Allow prolog variables to be referenced before they are declared (XQuery 3.0 feature)
+  * Module http://www.jsoniq.org/modules/function-library with handy JSONiq functions
+  * jn:parse-json can parse multiple top-level JSON items
+  * New semantics of null for comparison and arithmetics operations
+  * xml:parse (fragment parsing) now allows for a DOCTYPE declaration at the
+    beginning of the XML document (requested in bug #1016606).
+  * Roundtripping of JSON items has been moved from the serializer to encoding functions.
+  * Added uuid to public API.
+  * Best-effort serialization of atomic values in JSON items.
+  * Positional pagination support for index probes
+  * Recognize the {http://www.zorba-xquery.com/extensions}no-copy pragma to avoid
+    copying nodes before insertion into a collection.
+  * Added createUntypedAtomic to API's ItemFactory.
+  * new xqDoc feature; reporting collections and indexes
+  * new xqDoc function parameter to enable/disable xqDoc generation of certain
+    components
+  * Adding new external module read-pdf, it converts PDF documents to text or rendered images.
+
+Optimizations:
+  * Improved memory management for compiler expressions (no more ref counting)
+  * Extended optimization rules (for variable inlining/elimination and positional
+    predicate rewrite) to general flwor expressions.
+  * Early optimization of positional predicates to subsequence expressions: now
+    done at translation time, if possible.
+  * For non-mutable global variables, assign a type based on their initializing expr.
+  * Use char* instead of zstring as the hashmap key in json objects
+  * Removed document-order sorting after the index value probe functions.
+  * Optimize positional predicates involving inequality (convert them to subsequence)
+  * Optimize positional predicate that is in CNF with other predicates.
+  * Optimized runtime group iterator based on latest group-by semantics.
+  * Removed two unnecessary steps from optimizer.
+
+Bug Fixes/Other Changes:
+  * Fixed bug #1006960 (taking construction mode into account during no-copy rule)
+  * Fixed bug #950621 (Removed two-arg version of fn:parse-xml(); use XML module
+    function xml:parse() instead)
+  * Fixed bug #867227 (Improved error message for missing commas)
+  * Fixed memory leak during runtime group-by"
+  * Fixed bug #1024033 and #1023170 (segfaults in parse-xml:parse())
+  * Fixed bug #898792 (Dynamically computed strings can now be cast to xs:QName)
+  * Fixed bug in determining the IsId property of constructed attribute nodes
+  * Fixed bug #1034990 (text serialization with jsoniq fails)
+  * Fixed bugs #899364 and 899363 (throw XQST0103 in case of non-distinct window
+    variables)
+  * Fixed bug #923686 (implicitly declare global context size and context position
+    variables in main module and provide api function to assign values to these
+    variables)
+  * Fixed bug #899366 (enforce the type declaration of a window variable)
+  * Fixed bug #1034942 (improper variable inlining inside general flwor expr)
+  * Fixed bug #1024892 (index declaration references udf declared after the index)
+  * Fixed bug #1038410 (Memory leaks in parser, trace iterator, and general index)
+  * Fixed bug #1046411 (automatic boxing of multi-item sequence appearing as the
+    value of an object pair)
+  * Fixed bug #1046410 (automatic conversion to null of empty sequence appearing
+    as the value of an object pair)
+  * Fixed bug #1039488 (inserting more than one pair at once in a JSON object)
+  * Fixed bug #1042840 (QName pool free-list corruption)
+  * Fixed bug #866984 (better error message for an eval error)
+  * Fixed bug #1047538 (SourceFinder::findLocalNodeSources missing json expressions)
+  * Fixed bug #932374 (FOTS fn:matches failing tests)
+  * Fixed #1052383 (accessing context item in eval expr)
+  * Fixed bug #1046559 (dynamic resolution between function invocation and jsoniq
+    navigation)
+  * Fixed bug #932884 (HTML and XHTML serialization of empty elements)
+  * Fixed bug #1046415 (pair name cast to string)
+  * Fixed bug #1045902 (file:last-modified returns current date time)
+  * Fixed bug #1043976 (compiler warning in serializer code)
+  * Fixed bug #866994 (a better error message when collection iterator not open)
+  * Fixed bug #1039254 (allow empty sequence as position value in positional LET
+    var iterator)
+
+
+version 2.6
+
+New Features:
+  * Include first-class support for JSON data by implementing the JSONiq spec
+  - see http://jsoniq.org/ for more information. This feature is enabled by default.
+  * Implemented the new EQName syntax (use Q{namespace}local instead of "namespace":local)
+  * New function Item::isSeekable for streamable content (xs:string and xs:base64Binary)
+  * Implemented the latest W3C specification for the group by clause (backwards incompatible)
+  * New ft:tokenize-nodes() function to full-text module
+  * New XQuery 3.0 function fn:parse-xml-fragment#1
+  * New ItemFactory function that allows creating dateTime items without timezone
+  * Added support for transient maps to the
+    http://www.zorba-xquery.com/modules/store/data-structures/unordered-map module.
+  * Added support for fragments to fn:path
+  * Positional pagination support for collections
+  * Pagination by reference support for collections
+  * http://www.zorba-xquery.com/modules/archive module for creating,
+    reading, and updating various (compressed) archives (e.g. zip, tar.gz,
+    or tar.bz2)
+  * Incremental maintenance for general indexes
+  * New function in the http://www.zorba-xquery.com/modules/store/static/indexes/dml
+    module which returns the value of all keys contained in an index
+
+Optimizations:
+  * Optimization of comparison operations
+  * Tighter hoisting of expressions (also fixes bug #967428)
+  * Optimized hash sets used by fn:distinct-values and nodes-distinct
+  * Optimized hash function used for nodes (also fixes bug #1010051)
+  * Rewrite of plan serializer internals, resulting in big performance improvement
+  * Avoid treat expr for checking that the value of a non-external
+    global variable conforms to the type declaration of the variable
+  * Streaming execution for tumbling windows (also fixes bug #1010051)
+
+Bug Fixes/Other Changes:
+  * Fixed bug #1025622 (Incorrect JSON serialization of supplementary plane code points)
+  * Fixed bug #1016606 (DOCTYPE in the input of the parse-fragment function)
+  * Fixed bug #1002993 (bug during revalidation after update; improper condition
+    for calling TypeOps::get_atomic_type_code() from
+    SchemaValidatorImpl::isPossibleSimpleContentRevalImpl())
+  * Fixed bug #867357 (Improved parser error messages)
+  * Fixed bug #1026379 ("q" flag for fn:replace() is ignored)
+  * Fixed bug #932314 (non-comparable values must be treated as distinct by
+    fn:distinct-values)
+  * Fixed bug #1015580 (Add base64_streambuf / replace inefficient base64 code)
+  * Fixed bug #1022557 (subsequence function applied on window variable)
+  * Fixed bug #9910884 (raise XUST0001 in trycatch with mixed updating and simple clauses)
+  * Fixed bug #854506 (ugly type error messages) and partial fix for bug #867008
+  * Fixed bug #1008082 (bug in transform expr when a copy var is not used anywhere)
+  * Fixed bug #898066 (Stringstream & fn:trace)
+  * Fixed numbering of items in fn:trace starts with one
+  * Fixed bug #1003023$ (optimizer problems due to common subexpression after
+    var folding into if-then-else)
+  * Fixed bug #1006166 (disabling 2 functions with the same qname)
+  * Fixed bug #960083 (improper error handling of NaN comparisons)
+  * Fixed bug #878508 (JsonML serialization not escaping characters)
+  * The XML plan serialization format is not supported anymore
+
+
+version 2.5
+
+New Features:
+  * New XQuery 3.0 functions
+    - fn:available-environment-variables
+    - fn:environment-variables
+    - fn:uri-collection
+    - fn:unparsed-text
+    - fn:unparsed-text-available
+    - fn:has-children#0
+    - fn:nilled#0
+    - fn:path
+  * Added base64:decode#2 function which also does transcoding
+  * Extended API for Python, Java, PHP and Ruby
+  * Added JVM classpath to zorbacmd and to Zorba API
+  * Added full-text module
+  * Added support for NO_ICU (to not use ICU for unicode processing)
+  * Added XQJ support
+  * Added CollectionManager and DocumentManager support for XQJ
+  * Added new API EntityKind SOME_CONTENT
+  * Added new API StreamResource which is able to specify whether a
+    stream is seekable or not.
+  * Added new functions in the fetch module and the StaticContext to fetch
+    resources as binary
+  * Added non-core schema-tools module for getting sample XMLSchema from
+    XML instances and sample XML instances from XMLSchema.
+
+Optimizations:
+  * optimized insertion into a collection (don't copy it if the node was
+    created by an element constructor and is not used anywhere else in the query)
+  * Fixed performance problem with the findNodeSources function of the no-copy rule
+
+Bug Fixes/Other Changes:
+  * Fixed bug #867170 (Variables declared in Prolog are Overwritten inside the query)
+  * Fixed bug #1001463 (type not available during computation of function caching)
+  * Fixed bug #1002867 (resulting base64 in http-client is wrong)
+  * Fixed bugs #905028 (Allow to set base URI to undefined)
+  * Fixed bugs #931501 and #866987 (improved error messages for fn:format-number()
+  * fn:format-number raises FODF1310 instead of XTDE1310
+  * Fixed bug 955170 (Catch clause with URILiteral-based wilcard NameTest)
+  * Fixed bug #862971 (no error upon duplicate function declarations)
+  * Fixed bug 955135 (err:XQDY0044 not caught by try-catch expressions)
+  * Fixed bug #986075 (encountering flwor expr with no clauses)
+  * Fixed bug #967864 (var substitution did not update theFreeVars property)
+  * Fixed bug #891650 (context size var not always declared within path expr)
+  * Fixed bug #948879 (--uri-path doesn't work with fetch:content())
+  * Fixed bug in MarkNodeCopyProps rule (static cast to replace_expr without chaing the expr kind first)
+  * Fixed bug in window iterator (binding the end vars in the output tuple stream)
+  * Fixed bug #866547 (protect index-join rule from general flwor)
+  * Fixed bug #867253 (cdml:delete-nodes should only remove root nodes)
+  * Fixed bug #967428 (do not hoist index creation outside a try-catch)
+  * Fixed bug #872234 (prevent a rewritting to take place in case of sequential expr)
+  * Fixed bug #966706 (key uniqueness of index not enforced during incremental refresh)
+  * Fixed bug #906494 (default compile with D_FILE_OFFSET_BITS=64)
+  * Fixed bug #988412 (date:current-dateTime daylight saving)
+  * Fixed bug #912586, #912593 and #912722 (assertion failures with lax validation)
+  * Fixed bug #986377 (do not apply any updates on collection if it is to be truncated)
+  * Fixed bug #921458 (file:read-text-lines() blocking)
+  * Fixed bug #981405 (do not hoist expr containing try-catch variables out of the associated try-catch expression)
+  * Fixed bug #996084 (crash in Streamable*Item with file module)
+  * Fixed bug #947627 (throw XQST0099 if more than one declarations of context item type in same module)
+  * Fixed bug #980526 (no-copy rule bug due to global var being set in "distant" udf)
+  * Fixed bug #949910 (has-children may be invoked on all nodes)
+  * Fixed Bug #933490 (Error ItemFactoryImpl::createBase64Binary with istream)
+  * Fixed bug #867112 (Diagnostic Handler was not working on external APIs)
+  * Fixed bug #857842 (Assertion failed with simple content element with comments)
+  * Fixed bug #928626 (no setting classpath in xsl-fo module)
+
+version 2.2
+
+New Features:
+  * Add --compile-plan (-c) and --execute-plan (-e) options to zorba command line.
+  * Add XQuery 3.0 concat operator (http://www.w3.org/TR/xquery-30/#id-string-concat-expr)
+  * New URI module providing percent-decoding functions.
+  * The core parse-xml module is now able to parse input files in a streaming mode. A number of new options have also been added.
+  * LibXml2 version 2.7.0 or higher is now required in order to build Zorba.
+  * Added index management function to the C++ api's StaticCollectionManager.
+  * Added createDayTimeDuration, createYearMonthDuration, createDocumentNode, createCommentNode, createPiNode to api's ItemFactory.
+  * Fixed bug #905050 (setting and getting the context item type via the c++ api).
+  * Added split function to the string module that allows for streamable tokenization but doesn't have regular expression
+  * Add new XQuery interface for the PHP bindings.
+  * Added two API methods StaticContext::getFunctions to introspect the functions of a static context
+  * Added API method Item::getNamespaceBindings().
+  * Added a transcoding streambuffer to the API which allows transcoding arbitrary encodings
+    from and to UTF-8
+  * file:read-text is able to handle arbitrary encodings (fixes bug #867159)
+  * http:send-request is able to handle arbitrary encodings
+  * Added API method StaticContext::getNamespaceBindings() (see bug #905035)
+  * New version of the JSON converter module in the core of Zorba (no external dependencies anymore)
+  * Added truncate function to the collection modules for efficient deletion of all nodes in a collection.
+
+
+Optimization:
+  * No-copy optimization: avoids copying nodes during node-constructor expressions.
+  * Added external function annotations %ann:propagates-input-nodes and
+    %ann:must-copy-input-nodes to be used by the no-copy optimization.
+  * Caching of results for recursive functions with atomic parameter and return types.
+  * Added %ann:cache and %ann:no-cache to enable or disable caching of results of functions with atomic parameter and return types.
+  * Types-related optimizations for runtime operators (comparisons, FnBoolean, Or, And,
+    Compare, instance-of, cast, castable, treat, promote).
+  * More efficient implementation for base64Binary items
+  * Preallocate and reuse temp sequence iterator for LetVarITerator
+    and CtxVarIterator.
+  * Enhanced push-down of positional predicate into LetVarITerator
+    and CtxVarIterator.
+  * Change the implementation of the free-vars annotation and got rid
+    of the annotations map in expressions.
+
+Bug Fixes/Other Changes:
+  * Fixed bug 923015 (clone() not implemented for full-text expressions)
+  * Fixed bug 917923 (bug in copying outer var values into the eval dynamic context)
+  * Fixed bug 867509 (Can not handle largest xs:unsignedLong values)
+  * Fixed bug 924063 (sentence is incorrectly incremented when token characters end without sentence terminator)
+  * Fixed bug 909126 (bug in cloning of var_expr)
+  * Fixed bug 928631 (external builtin function were not executed in the module they
+    were declared)
+  * Fixed bug in destruction of exit_catcher_expr
+  * Fixed bug #867024 (error messages)
+  * Fixed bug #957580 (stream read failure in StringToCodepointsIteartor)
+  * Fixed bug #911585 (management of variables during eval)
+  * Fixed bug #866423 (fn:empty and fn:exists iterators must reset their input in
+    case of early-out)
+  * Fixed bug #955574 (http-client "hangs" if following a POST request)
+  * Fixed bug #945241 (StaticCollectionManager::declaredIndexes() and temporary indexes)
+  * Fixed bug #872288 (reset recursive flag during node rename)
+  * Fixed bug #905041 (allow for the default element and function namespaces to be
+    set multiple times via the c++ api).
+  * Fixed bug #907872 (segfault when returning an input ItemSequence from an external function).
+  * Fixed bug in codegen: do not create a materialize clause if one exists already
+    support.
+  * Fixed bug involving positional var and groupby
+  * Fixed bug #867266 (do not hoist updating expressions)
+  * Fixed bug #867022 (added location and params to some XPTY0004 errors)
+  * zerr is not predeclared anymore to be http://www.zorba-xquery.com/errors
+  * Fixed bug #917981 (disallow declaring same module twice).
+  * Deprecated StaticContext:getNamespaceURIByPrefix()
+  * Fixed bug #943788 (streamable string is not seekable)
+  * Fixed bug #921624 (slow queries with bogus example.com schema URIs)
+  * Fixed bug #918211 (xqueryx fulltext w3c conformance generation)
+  * Fixed bug #918157 (Add XQFTTS to validation queue)
+  * Fixed bug with unversioned modules with C++ external functions
+  * Fixed bug #912579 (validate-in-place on non-root elements)
+  * Fixed bug #891209 (validation with xsi:type returns untyped)
+  * Fixed bug #952829 (Nondeterministic annotation doesn't seem to be checked)
+  * Fixed bug #951772 (Comment node crashes serialization)
+  * Fixed bug #945241 (StaticCollectionManager::declaredIndexes() and temporary indexes)
+
+
+version 2.1
+
+New Features:
+  * New node-position module. This module allows to obtain a representation of a node position, which
+    can be used to assess structural relationships with other nodes.
+  * New node-reference module. References can be obtained for any node, and
+       different nodes cannot have the same identifier.
+  * Custom Full-text thesaurus using Zorba URI resolver mechanism.
+  * Modified C++ API to add isSequential, getExternalVariables,
+       isBoundContextItem and isBoundExternalVariable Functions
+  * Collection allows to retrieve information about the type
+  and the annotations of a static collection.
+  * Implemented the probe-index-range-value for general indexes
+  * Added ExternalFunctionParameter class to be registered in the DynamicContext
+  * New module for compiling and executing XQueries from XQuery (xqxq)
+  * External functions are allowed to be updating (i.e. return a pending update list)
+
+Optimization:
+  * Optimization for positioned sequence access (e.g. $x[$x[1]] where $x is a
+  sequence of integers)
+  * Optimization for count(collection()) expressions
+  * Optimization of the fn:substring function in the case when its $start and $length arguments
+  are integers
+
+Bug Fixes/Other Changes:
+  * Fixed bug #3403291 (build for Fedora 15)
+  * Fixed bug #3397293 (Incorrect XQueryX error message)
+  * Fixed bug #3398637 (Nested element constructors cause loss of namespace bindings)
+  * Fixed bug #3401592 (Undo of Create Collection doesn't work)
+  * Fixed bug #3404689 (assignment problem in flwor)
+  * Fix for bug #3404450 (testdriver_mt problem: caching and validation of docs)
+  * Fixed installation bug to not install the .so for test modules
+  * Fixed bug #3390410 (Adding a node to a collection causes out of bound in vector)
+  * Fixed bug #3406200 (node types were not being moved to new tree during node detach)
+  * Fixed bug #3406191 (Namespace bindings lost after update due to bug in node detach)
+  * Fixed bug #3290122 (ZDST0003 needs collection name)
+  * Fixed bug #3406272 (merging of adjacent text nodes must be done after all
+    updates have been applied).
+  * Don't raise warnings for unknown annotations.
+  * Fixed bug #3409344 (during detach, if the node being detached is the root of
+    its tree, it should be detached from the tree as well; otherwise memory
+    corruption will occur)
+  * Fixed bug # (Should not destroy the parent of a node that is being detached
+    before the detach is done).
+  * Added const qualifier to StaticContext::getAuditEvent()
+  * Fixed bug #3408181 (available-collection() returns undeclared collections)
+  * Fixed bug #859465 (Fatal error if a PUL contains two deactivate IC primitives)
+  * Fixed bug #859467 (Fatal error if a PUL contains two activate Foreign Key primitives)
+  * Fixed bug #859468 (Fatal error if a PUL contains two activate Simple IC primitives)
+  * Fixed bug #859522 (Fatal error if a PUL contains two delete document primitives)
+  * Fixed bug #859968 (Using put on an attribute produces an invalid XDM instance and may cause segmentation faults)
+  * Fixed bug #855314 (should not fold a constant expr that returns an error item)
+  * Fixed bug when parsing a document with a base-uri attribute.
+  * Fixed bug #863320 (Sentence is incorrectly incremented when token characters end without sentence terminator)
+  * Fixed bug #863730 (static delete-node* functions don't raise ZDDY0012)
+  * Implemented the probe-index-range-value for general indexes
+  * Removed ZSTR0005 and ZSTR0006 error codes
+  * Fixed bug #867662 ("nullptr" warning)
+  * Fixed bug #868258 (Assertion failure with two delete collection)
+  * Fixed bug #871623 and #871629 (assertion failures with insertions in dynamic collections)
+  * Fixed bug #867262 (allow reuse of iterator over ExtFuncArgItemSequence)
+  * Fixed bug #869024 (segmentation fault with node-reference)
+  * Fixed bug #869025 (segmentation fault with node-reference)
+  * New node-reference module. References can be obtained for any node, and
+      different nodes cannot have the same identifier.
+  * Fixed bug #872697  (segmentation fault with validation of NMTOKENS)
+  * General index cannot be declared as unique if the type of its key is
+    xs:anyAtomicType or xs:untypedAtomic.
+  * Added undo for node revalidation
+  * Optimization for count(collection()) expressions
+  * Fixed bug #872796  (validate-in-place can interfere with other update primitives)
+  * Fixed bug #872799 (validate-in-place can set incorrect types)
+  * Fixed bug #855715 (Invalid escaped characters in regex not caught)
+  * Fixed bug #868325 (fn:analyze-string fails with some recursive subgroups)
+  * Fixed bug #872697 (segmentation fault with validation of NMTOKENS)
+  * General index cannot be declared as unique if the type of its key is
+  xs:anyAtomicType or xs:untypedAtomic.
+  * Added undo for node revalidation
+  * Optimization for count(collection()) expressions
+  * Fixed bug #867133 (SWIG PHP build failure on Mac OSX)
+  * Fixed bug #872796 (validate-in-place can interfere with other update primitives)
+  * Fixed bug #872799 (validate-in-place can set incorrect types)
+  * Fixed bug #872850 (Serialization of Tumbling Window For fails)
+  * Fixed bug #855715 (Invalid escaped characters in regex not caught)
+  * Fixed bug #862089 (Split binary/xq install directories for modules) by
+  splitting "module path" into separate URI and Library paths
+  * New node-position module. This module allows to obtain a representation of a node position, which
+    can be used to assess structural relationships with other nodes.
+  * Fixed bug #872502 (validation of the JSON module xqdoc fails)
+  * Fixed bug #897619 (testdriver_mt can not run the XQueryX tests)
+  * Fixed bug #867107 (xqdoc dependency to zorba is wrong)
+  * Fixed bug #897616 (Fix the generation of the XQFTTS report results for
+  W3C)
+
+version 2.0.3
+  * Fixed bug #867662 ("nullptr" warning)
+  * documentation improvements
+
+version 2.0.2
+  * Fixed bug #3401971 (node-by-reference on dynamic collections)
+  * documentation improvements
+  * installer improvements
+  * Fixed bug #3403291 (build for Fedora 15)
+  * Don't install the .so for test modules
+  * Fix for running ctest on Windows
+
+version 2.0.1
+
+  * Custom Full-text stemming.
+  * Custom Full-text tokenization.
+  * Fixed scripting bug where apply statement was considered a sequential expr even if the source expr was non-updating and non-sequential.
+  * Fixed bug #3394400 (Element replacement, really unexpected result)
+  * Fixed bug #3394588 (Unexpected error during pul undo)
+  * Fixed bugs #3398511 and #3398552 with "make install"
+  * Fixed bug #3398521 for compiling with ZORBA_NO_XMLSCHEMA
+
+version 2.0
+  * Zorba 2.0 is a major rewrite of previous versions. It doesn't claim to
+    preserve backwards compatibility with any 1.X version.
+    Host language API changes have been made to the following components:
+    - External functions API
+    - XmlDataManager
+    - Error reporting
+    - Debugger API
+    XQuery language and API changes have been made to the following components:
+    - XQuery Scripting Extension
+    - Function APIs
+    - XQuery Data Definition Facility
+    - XQuery modules and module versioning
+    - Changes to conform with the latest XQuery 3.0
+    - Namespaces of annotations, errors, collations.
+  * In addition to host language API and XQuery language improvements,
+    plenty of bug fixes and optimizations have been made.
+
+version 1.4
+  * added a datetime library module with nondeterministic functions
+  * new nondeterministic read functions in the http-client module
+  * the http-client's send-request function accepts a non-validated request parameter
+  * fixed an issue with a wrong static context being used in eval queries (see bug item #2979317)
+  * added XQuery 1.1 Switch expressions (only available in 1.1 processing mode)
+  * added the fn:parse function from XQuery Functions and Operators 1.1
+  * improved error reporting for parser errors
+  * improved error reporting for errors regarding sequential expressions
+  * bug fixes
+    - accept relative URIs in xs:anyURI constructors (#2988209)
+    - direct element/attribute construction (#2999765)
+    - deep-equal (#2999772)
+    - schema-attribute(*) is parsed as a function call instead of a node test (#2993286)
+    - handling xml:base attributes during doc loading (#3013096)
+    - fixed build with CMake 2.6.0 on Debian Lenny
+    - try-catch error if XQuery version < 1.1 (#3005344)
+    - W3C test suite bugs CastableAs649 and CastableAs650 (#2999777)
+    - assertion in StatelessExtFunctionCallIterator (#3012651)
+    - http-client return type handling for (*+xml and text/html)
+  * optimization of fn:subsequence
+  * new xqDoc function (xqdoc-content) taking a documented module as string
+  * new xqDoc feature; reporting functions invoked from within a particular function
+  * xqDoc schema change; name element for functions got an arity attribute
+  * added a tidy library module that provides functions to tidy an HTML string
+    and returns a valid XHTML document node (http://www.zorba-xquery.com/modules/tidy)
+  * added a schema library module that provides XML schema related functions (e.g. schema-type)
+    (http://www.zorba-xquery.com/modules/schema)
+  * added a node reference library module that provides functions to retrieve the URI
+    of a node and vice versa (http://www.zorba-xquery.com/modules/reference)
+  * added a hmac module (http://www.zorba-xquery.com/modules/security/hmac)
+    that provides an sha1 function (e.g. used in OAuth)
+  * added a random module (http://www.zorba-xquery.com/modules/random)
+    that provides fuctions for generating (pseudo-)random integers and UUIDs.
+
+version 1.2
+  * more introspection functions (e.g. in-scope-element and in-scope-attribute)
+  * first prototype for higher order functions from XQuery 1.1
+  * JSON module in (com/zorba-xquery/www/modules/json)
+  * huge performance improvements
+  * added an Atom schema to the build-in schemas
+  * register a callback function in the static context that is called
+    if a collection or index declaration is processed (compiled)
+  * nondeterministic (instead of sequential) functions in the file module
+  * reference counting the store (de)initialization
+  * many bug fixes; for example
+    - compile with Xerces 3.1
+    - loading external functions (prefix problem)
+    - plan serializer fixes
+    - serialization fixes
+    - base64 decoder
+    - loading documents with general entities
+    - EXPATH http-client fixes
+    - not hoisting nondeterministic functions
+    - scripting related fixes
+    - unicode related fixes (e.g. for parameters to the doc function)
+    - StaticContext::loadProlog fix
+    - SAX serialization fix
+
+version 1.0
+  * Changes in the C++ API
+    * Removed ResultIterator class. All public API methods use simply
+      Iterator.
+    * Added a new class named ExternalModule.
+      This class must be used for registering external functions.
+      This change makes the external function API incompatible with
+      previous releases.
+    * Loading pre-compiled queries (using loadExecutionPlan) requires to pass
+      a SerializationCallback which is used for
+      retrieving registered uri resolvers or trace streams.
+      Moreover, the callback is used for retrieving ExternalModules
+      which have been used when compiling the query.
+    * Changed the append function in zorba::String to const. Now, the
+      function does not change the String itself, but returns a new
+      String. Furgthermore zorba::String::append can now handle other
+      zorba::String objects - not only const char*. Also the operators
+      + and += are defined on zorba::String.
+  * Other language bindings (Java, PHP, python, ruby) also now use
+    simply Iterator; ResultIterator removed.
+  * XQC (C language binding) brought up-to-date with latest revision
+    of that spec (https://xqc.sourceforge.net).
+  * Resolving of modules is now enhanced by the so called "Zorba
+    Module Path".  Moreover, multiple ModuleURIResolvers can be
+    registered in one StaticContext.  See the documentation for more
+    information.
+  * Added static and dynamic context introspection modules.
+  * Added the excel library to the built-in modules.
+    Implemented the most used excel functions.
+  * Added the math library to the built-in modules (the namespace has
+    changed to http://www.zorba-xquery.com/modules/math)
+  * Pass the Static- and DynamicContext as parameter to the evaluate function
+    of external functions.
+  * The XQuery class got a setTimeout option that allows the user to set a
+    maximum running time of a particular query execution.
+  * The StatelessExternalFunction is now non-pure by default. There is
+    a new subclass called PureStatelessExternalFunction which should
+    be used instead. PureStatelessExternalFunctions don't have access
+    to the Static- and DynamicContext.
+  * Renamed XQuery::serialize to XQuery::execute. The new method also
+    implements the functionality of the XQuery::applyUpdates method
+    (which was removed).
+  * Added the serialize library to the built-in modules. The function
+    util:serialize-to-string has been removed.
+  * The DynamicContext can be used to pass arbitrary name-value pairs
+    to the evaluate method of external functions.
+  * Implemented CSV to XML converters. See csv2xml.xq module.
+    You can convert back and forth between CSV files and XML
+    or formated text files and XML.
+  * Changes in the email functionnality
+    * implemented smtp:send functions as external functions
+    * added support for MIME messages (Text in character sets other
+      than ASCII, Non-text attachments, Message bodies with multiple
+      parts, Header information in non-ASCII character sets)
+  * most of the runtime iterators and functions are generated
+    (see https://sourceforge.net/apps/mediawiki/zorba/index.php?title=Creating_New_Runtime_Iterators_and_Functions)
+  * improved exception messages raised by the serializer
+  * Json is now able to parse Unicode messages
+  * improved functionality for java, php, python and ruby bindings.
+
+version 0.9.8-rev1 (2009.09.22)
+  * bug fixes
+    * fixed a crash caused by converting long integers (> 1024 digits)
+      to string
+    * the compile-only check reports the URI of the encapsulating
+      entity in it's error report (used for XQDT semantic checking)
+    * fixed 'for $x in () return $x/test' to return the empty sequence
+      instead of raising a static error
+    * fixed build using Xerces-C 3.0.1
+    * fixed build for Mac OS X 10.6 (Snow Leopard)
+    * improved error reporting in the command line utility
+    * improved detection of the installed version of Xerces-C (raise
+      an error if a wrong version is installed)
+
+version 0.9.8 (2009.08.26)
+  * More XQuery Scripting Features
+    * default initialization for external variables
+    * block local variables
+  * XQuery 1.1
+    * Support for the "validation as TypeName" feature
+    * Changed the try/catch syntax as specified in XQuery 1.1 (except
+      the try- and catch expressions are ExprSingle and not Expr).
+  * Examples for the Java API
+  * Function library
+  * creating PDFs using XSL Formatting Objects (requires Java)
+  * util:parse function
+  * converter functions to/from JSON or JsonML and XML
+  * function for sending simple text emails
+  * the util:tidy function returns a node instead of a string.
+  * XQDoc module http://www.zorba-xquery.com/zorba/xqdoc-functions
+  * Added a loadProlog function to the static context.
+  * Added support for XQueryX and XQueryX Update
+  * Added compiled query persistence to the C++ API
+    (XQuery::loadExecutionPlan() and XQuery::saveExecutionPlan())
+  * Added a printPlan function to the XQuery class of the API.
+  * Added new option in the Zorba command line utility: compile-only,
+    parse-only, lib-module, print-errors-as-xml.
+  * Added two plan printing function (printPlanAsXML and
+    printPlanAsDOT) to the SWIG generated APIs.
+  * Implemented 'declare option': options are set in the static context.
+  * fn:trace can be disabled by setting the option
+    QName("http://www.zorba-xquery.org/option", "trace") to "disable".
+  * Changed the scripting syntax of the exit expression from 'exit
+    with' to 'exit returning'.This is due to an ambiguity in the
+    grammar (see http://www.w3.org/Bugs/Public/show_bug.cgi?id=6852
+    for more information).
+  * Added accessor functions for node items to the Item class in the
+    API (i.e. getChildren, getAttributes, and getNodeName).
+  * Added a UserException to the API which is raised if the user makes
+    a call to the fn:error function.
+  * UTF8 support for the lexer
+  * bug fixes and performance improvements
+
+version 0.9.5 (2008.02.17)
+  * Unified the Tidy and Rest API's
+  * Added new sinatures to zorba-util:tidy and zorba-util:tdoc that
+    allow setting of tidy functions
+  * Added Schema imports using target namespace or location hints
+  * Added StaticContext::findFunctions and StaticContext::disableFunciton
+  * Added Functions for collections
+  * Windows packages include a zorba_simplestore.dll
+  * Improved error messages for regular expression processing
+  * Added functions to return an item instead of xs:string
+  * Added a new signature to zorba-util:random in order to be able to call
+    random within a loop and get different numbers each time.
+  * Corrected the types of some functions/operators (YM_DURATION or
+    DT_DURATION instead of DURATION).
+  * Now possible to pass empty sequence as collection URI.
+  * Now cURL is set to follow an infinite number of redirects.
+  * Added validate after update
+  * Fixed schema files without target namespace.
+  * Fixed notation cast.
+  * Added list and union item types to type manager cache
+  * Added validation tests for schema substitution groups
+  * Added message when error during update test driver.
+  * Added partial support for scripting (XQSE)
+  * Added support "default element namespace" schema imports
+  * Added support variable initializers that refer to forward variable
+    declarations.
+  * Various bug fixes and performance enhancements.
+
+version 0.9.4 (2008.10.06)
+  * added General FLWOR (GFLWOR)
+    * added Windowing functionality
+    * added ability to perform "outer" joins in the FLWOR with outer
+      for clauses
+    * output numbering added to FLWOR
+  * Added HTTP support to module import
+  * fn:parse() is implemented as per the XQuery proposal
+  * Extended api to register user-defined URI resolvers for documents,
+    collections, schemas, and modules
+  * boost dependencies removed
+  * Added xquery debugging support
+  * Added a store implementation based on Windows DOM.
+  * Added functions to make calls to REST based web services through XQuery
+  * Added PHP bindings to zorba
+  * Added tidy support to convert web pages into xhtml.
+  * Added XML Schema support for validation
+  * Added the ability to revalidate XML data with respect to a Schema
+    after applying updates
+
+version 0.9.21-4303 (2008.06.26):
+  * fixed installation problem for python and ruby language bindings
+  * fixed some valgrind reported memory problems
+  * other minor bug fixes and performance improvements
+
+version 0.9.2-4251 (2008.06.19):
+  * Module support (as in the XQuery 1.0 W3C recommendation)
+  * Removed boost shared pointers from the API
+  * Performance improvements and bug fixes
+  * C API (zorbac.h)
+  * Rudimentary SWIG interface for generating other language bindings
+    (i.e. Ruby and Python)
+  * Added support for running multiple queries in the command line utility
+  * group by (as in the evolving W3C XQuery 1.1 recommendation)
+  * try-catch (as in the evolving W3C recommendation)
+  * eval facility to dynamically evaluate a string and execute it as a query
+  * some math functions (e.g. sqrt, sin, cos, etc)
+  * Basic schema validation (without post schema validation and
+    substitution groups)
+  * Stabilized the Store API & build the simplestore as a separate library
+
+version 0.9.1 (2008.04.30):
+  * Initial release supporting
+    * XQuery 1.0 and XPath 2.0 (as in the W3C recommendation)
+      except modules and only limited support for schema validation
+    * XQuery Update Facility 1.0 (as in the evolving W3C recommendation)
+    * An In-Memory (replaceable) XML store
+      (implements the XQuery Data Model (XDM) W3C recommendation)
+  * This release 0.9 passes 97.6% of the W3C tests of XQuery 1.0 test suite
+    and 99.4% of the XQuery Update Facility test suite.

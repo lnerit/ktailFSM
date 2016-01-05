@@ -1,0 +1,263 @@
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0)")}
+
+%{!?php_sitelib: %define php_sitelib %(/usr/bin/php-config --extension-dir)}
+Name:    zorba
+Version: @ZORBA_MAJOR_NUMBER@.@ZORBA_MINOR_NUMBER@.@ZORBA_PATCH_NUMBER@
+Release: 2%{?dist}
+Summary: General purpose XQuery processor implemented in C++
+
+Group: System Environment/Libraries
+License: ASL 2.0
+URL: http://www.zorba-xquery.com/
+Source0: ftp://ftp.heanet.ie/pub/download.sourceforge/z/zo/zorba/%{name}-%{version}.tar.gz
+
+%{!?ruby_sitelib: %define ruby_sitelib %( ruby -r rbconfig -e "print Config::CONFIG['sitearchdir']")}
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+BuildRequires: bison
+BuildRequires: cmake >= 2.4 
+BuildRequires: doxygen
+BuildRequires: flex
+BuildRequires: graphviz
+BuildRequires: php >= 5
+%if 0%{?fedora} >= 9
+BuildRequires: libcurl-devel
+BuildRequires: tex(latex)
+BuildRequires: tex(dvips)
+BuildRequires:tex(tex)
+%else 
+BuildRequires: curl-devel
+BuildRequires: tetex
+BuildRequires: tetex-dvips
+BuildRequires: tetex-dvips
+%endif
+BuildRequires: libicu-devel
+BuildRequires: libtidy-devel
+BuildRequires: libxml2-devel >= 2.2.16 
+BuildRequires: php-cli php-devel
+BuildRequires: python-devel
+BuildRequires: ruby ruby-devel >= 1.8
+BuildRequires: xerces-c-devel >= 2.7 
+
+%description
+Zorba is a general purpose XQuery processor implementing in C++ the
+W3C family of specifications. It is not an XML database. The query
+processor has been designed to be embeddable in a variety of
+environments such as other programming languages extended with XML
+processing capabilities, browsers, database servers, XML message
+dispatchers, or smart phones. Its architecture employs a modular
+design, which allows customizing the Zorba query processor to the
+environment's needs. In particular the architecture of the query
+processor allows a pluggable XML store (e.g. main memory, DOM stores,
+persistent disk-based large stores, S3 stores).
+
+
+%package devel
+Summary: Header files for %{name}
+Group: Development/Libraries
+Requires: %{name} = %{version}-%{release}
+
+
+%description devel
+The %{name}-devel package contains headers for building applications
+that use %{name}.
+
+
+%package python
+Summary: %{name} Python module for %{name}
+Group: Development/Languages
+Requires: %{name} = %{version}-%{release}
+BuildRequires: swig
+
+
+%description python
+Provides Python module to use %{name} API
+
+%package php
+Summary: %{name} PHP module for %{name}
+Group: Development/Languages
+Requires: %{name} = %{version}-%{release}
+
+%description php
+Provides PHP module to use %{name} API
+
+
+%package ruby
+Summary: %{name} Ruby module
+Group: Development/Languages
+BuildRequires: swig
+Requires: %{name} = %{version}-%{release}
+Requires: ruby >= 1.8
+%description ruby
+Provides ruby module to use %{name} API
+
+ 
+%prep
+%setup -q
+
+%build
+mkdir -p build
+pushd build
+%cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Debug -D CMAKE_SKIP_BUILD_RPATH=1  ..
+make VERBOSE=1 %{?_smp_mflags}
+make doc
+popd
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT INSTALL="install -p" -C build
+
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+
+%post -p /sbin/ldconfig
+
+
+%postun -p /sbin/ldconfig
+
+
+%files
+%defattr(-,root,root,-)
+%{_bindir}/%{name}
+%{_libdir}/libzorba_simplestore.*
+
+
+%{_datadir}/doc/%{name}-%{version}/
+
+
+%files devel
+%defattr(-,root,root,-)
+%{_libdir}/*.so
+%dir %{_includedir}/%{name}
+%dir %{_includedir}/%{name}/%{name}
+%{_includedir}/%{name}/%{name}/*.h
+%dir %{_includedir}/%{name}/%{name}/util
+%{_includedir}/%{name}/%{name}/util/*.h
+%dir %{_includedir}/%{name}/simplestore
+%{_includedir}/%{name}/simplestore/*.h
+%dir %{_datadir}/doc/%{name}-%{version}/python
+%dir %{_datadir}/doc/%{name}-%{version}/python/examples
+%{_datadir}/doc/%{name}-%{version}/python/examples/*.py
+%{_datadir}/doc/%{name}-%{version}/python/examples/*.pyc
+%{_datadir}/doc/%{name}-%{version}/python/examples/*.pyo
+%dir %{_datadir}/doc/%{name}-%{version}/python/html
+%{_datadir}/doc/%{name}-%{version}/python/html/*.gif
+%dir %{_datadir}/doc/%{name}-%{version}/ruby
+%dir %{_datadir}/doc/%{name}-%{version}/ruby/examples
+%{_datadir}/doc/%{name}-%{version}/ruby/examples/*.rb
+%dir %{_datadir}/doc/%{name}-%{version}/ruby/html
+%{_datadir}/doc/%{name}-%{version}/ruby/html/*.gif
+
+
+%files python
+%defattr(-,root,root,-)
+%dir %{python_sitelib}/_zorba_api.so
+%dir %{python_sitelib}/zorba_api.*
+
+%files php
+%{php_sitelib}/zorba_api.php
+%{php_sitelib}/zorba_api.so
+
+
+%files ruby
+%defattr(-,root,root,-)
+%dir %{ruby_sitelib}/zorba_api.so
+
+
+%changelog
+* Tue Mar  3 2009 Paul F. Kunz <PaulfKunz@gmail.com> - 0.9.6-2
+- Fix for difference in Tex for Fedora 8
+
+* Tue Feb 24 2009 Paul Kunz <paulfkunz@gmail.com> - 0.9.6-1
+- Added php subpackage
+
+* Mon Feb 23 2009 Paul Kunz <paulfkunz@gmail.com> - 0.9.5-4
+- Package the correct released version
+- consistent use of white space in cmake command
+- added tex(tex) build requires
+
+* Sat Feb 21 2009 Paul Kunz <paulfkunz@gmail.com> - 0.9.5-3
+- Added patch for lib64 install
+- Added requires libicu-devel
+- Add requires tex
+
+* Wed Feb 11 2009 Paul Kunz <PaulfKunz@gmail.com> - 0.9.5-2
+- Cleanup BuildRequires for readablity
+- Added addtional BuildRequires
+- make sure created directories are owned
+- Added condition for curl and version of Fedora
+
+* Thu Feb  5 2009 Paul Kunz <PaulfKunz@gmail.com> - 0.9.5-1
+- change require icu to libicu
+- Update to 0.9.5 version
+- remove require boost
+
+* Tue Dec 16 2008 Paul Kunz <PaulfKunz@gmail.com> - 0.9.4-4
+- added php-devel
+
+* Mon Nov 10 2008 Paul Kunz <PaulfKunz@gmail.com> - 0.9.4-3
+- final release of upstream version
+- remove cmake debugging
+
+* Tue Sep 16 2008 Paul Kunz <PaulfKunz@gmail.com> - 0.9.4-1
+- fix for new version
+- new header file added in msdom
+
+* Mon Aug 25 2008 Paul Kunz <PaulfKunz@gmail.com> - 0.9.21-4
+- Added requirement of graphviz and libcurl-devel
+
+* Fri Aug 22 2008 Paul Kunz <PaulfKunz@gmail.com> - 0.9.21-3
+- remove devel-doc subpackage
+
+* Sun Aug 17 2008 Paul Kunz <PaulfKunz@gmail.com> - 0.9.21-3
+- Fixed Source tag with ftp: and site that has 0.9.21 version
+- added Ruby requirements
+- Added requirement of boost-devel
+- fixed file attributes
+- move python_sitelib to top
+- Fixed spelling
+
+* Sun Aug 17 2008 Paul Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.1-2
+- Use ftp: instead of file: for source
+
+* Tue Jul 29 2008 Paul Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.21-2
+- Fixed grammar of summary
+
+* Mon Jul 28 2008 Paul Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.21-2
+- remove rpath in build
+- added documentation
+- added devel package
+- remove non utf8 character
+- fix license entry
+- fix description line
+
+
+* Sun Jun 29 2008 Paul F. Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.21-1
+- Update to 0.9.21
+
+* Fri Jun 27 2008 Paul Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.2-2
+- Added required -devel packages for build
+
+
+* Sun Jun 22 2008 Paul F. Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.2-2
+- Added correct install of ruby and python modules
+
+* Fri Jun 20 2008 Paul F. Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.2-1
+- update to version 0.9.2
+
+* Mon Jun 16 2008 Paul F. Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.2541-1
+- added python and ruby subpackages
+
+* Fri Jun 13 2008 Paul F. Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.2-1
+- removed patch for next release
+
+* Thu May 29 2008 Paul F. Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.1-1
+- Add patch for gcc 4.3 under Fedora 9
+
+
+* Mon May 19 2008 Paul F. Kunz <Paul_Kunz@slac.stanford.edu> - 0.9.1-1
+- Initial 

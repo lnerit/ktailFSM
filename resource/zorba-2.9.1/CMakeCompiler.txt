@@ -1,0 +1,264 @@
+# Copyright 2006-2008 The FLWOR Foundation.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License. 
+
+
+# check if clang is used to compile c++
+EXEC_PROGRAM(${CMAKE_CXX_COMPILER}
+               ARGS --version
+               OUTPUT_VARIABLE CXX_COMPILER_VERSION_OUTPUT
+)
+STRING(REGEX MATCH "clang"
+  CXX_IS_CLANG "${CXX_COMPILER_VERSION_OUTPUT}")
+IF (CXX_IS_CLANG)
+  SET (CLANG 1)
+ELSE ()
+  SET (CLANG 0)
+ENDIF ()
+
+#-----------------------------------------------------------------------------
+# Let's use the highest warning level.
+#-----------------------------------------------------------------------------
+MESSAGE(STATUS "CMAKE_BUILD_TOOL = ${CMAKE_BUILD_TOOL}")
+IF(NOT CLANG AND CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|MSBuild)")
+  # Use only the second highest warning level for the Visual Studio
+  # compiler: /W3. This is because /W4 is too strict and generates too many
+  # warnings. This would make much of the code non-portable or too many
+  # ifdef pragma expressions would be necessary.
+  # See: http://digipen1.xmmg.com:8181/dpweb/docs/CompilingWarningLevel4.html
+
+  # for C++
+  IF(CMAKE_CXX_FLAGS MATCHES "/W[0-2]")
+    STRING(REGEX REPLACE "/W[0-2]" "/W3" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  ELSE(CMAKE_CXX_FLAGS MATCHES "/W[0-2]")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
+  ENDIF(CMAKE_CXX_FLAGS MATCHES "/W[0-2]")
+  # and for C
+  IF(CMAKE_C_FLAGS MATCHES "/W[0-2]")
+    STRING(REGEX REPLACE "/W[0-2]" "/W3" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+  ELSE(CMAKE_C_FLAGS MATCHES "/W[0-2]")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
+  ENDIF(CMAKE_C_FLAGS MATCHES "/W[0-2]")
+  MESSAGE(STATUS "Increased the warning level to level 3: /W3. New flags:")
+  MESSAGE(STATUS "CMAKE_C_FLAGS:            ${CMAKE_C_FLAGS}")
+  MESSAGE(STATUS "CMAKE_CXX_FLAGS:          ${CMAKE_CXX_FLAGS}")
+
+  # For the same reasons mentioned above, disable deprecation warnings for standard C functions
+  ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -D_PREFIX_ -D_SCL_SECURE_NO_WARNINGS -D_UNICODE -DUNICODE)
+
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "/DNOMINMAX")
+    # avoid the min/max name clash between std versions and the
+    # ones defined in Windef.h on Windows. Disable the latter.
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNOMINMAX")
+    MESSAGE(STATUS "Added /DNOMINMAX compiler flag to CMAKE_CXX_FLAGS. New flags:")
+    MESSAGE(STATUS "CMAKE_CXX_FLAGS:          ${CMAKE_CXX_FLAGS}")
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "/DNOMINMAX")
+
+   SET(ZORBA_PROCESSORS_FOR_COMPILE $ENV{NUMBER_OF_PROCESSORS} CACHE STRING "Number of processors for compiling") 
+   MESSAGE(STATUS "Number of processors/cores used for compiling ZORBA_PROCESSORS_FOR_COMPILE = ${ZORBA_PROCESSORS_FOR_COMPILE}")
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP${ZORBA_PROCESSORS_FOR_COMPILE}")
+   GET_FILENAME_COMPONENT(COMPILER_FULL_PATH ${CMAKE_C_COMPILER} PROGRAM)
+IF(COMPILER_FULL_PATH MATCHES "Visual Studio 8")
+   #to detect 64 bit portability issues
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wp64")
+ENDIF(COMPILER_FULL_PATH MATCHES "Visual Studio 8")
+
+ENDIF(NOT CLANG AND CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake|MSBuild)")
+
+IF(CLANG AND WIN32)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -no-integrated-as")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -no-integrated-as")
+ENDIF()
+
+SET(ZORBA_GNUCOMPILER_VERSION)
+SET(ZORBA_GNUCOMPILER_MAJOR_VERSION)
+IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR CLANG)
+  EXEC_PROGRAM(${CMAKE_CXX_COMPILER}
+                 ARGS --version
+                 OUTPUT_VARIABLE ZORBA_GNUCOMPILER_VERSION
+  )
+  STRING(REGEX REPLACE ".*([0-9]\\.[0-9]\\.[0-9]).*" "\\1"
+         ZORBA_GNUCOMPILER_VERSION ${ZORBA_GNUCOMPILER_VERSION})
+  STRING(REGEX REPLACE ".*([0-9])\\.[0-9]\\.[0-9].*" "\\1"
+         ZORBA_GNUCOMPILER_MAJOR_VERSION ${ZORBA_GNUCOMPILER_VERSION})
+  MESSAGE(STATUS "Detected GNU compiler version ${ZORBA_GNUCOMPILER_VERSION} (major version ${ZORBA_GNUCOMPILER_MAJOR_VERSION})")
+ENDIF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR CLANG)
+
+IF(CMAKE_COMPILER_IS_GNUCXX)
+  IF (ZORBA_WITH_CODE_COVERAGE)
+    IF (NOT CMAKE_CXX_FLAGS MATCHES "profile-arcs")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs")
+    ENDIF (NOT CMAKE_CXX_FLAGS MATCHES "profile-arcs")
+    IF (NOT CMAKE_CXX_FLAGS MATCHES "test-coverage")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage")
+    ENDIF (NOT CMAKE_CXX_FLAGS MATCHES "test-coverage")
+    IF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "profile-arcs")
+      SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fprofile-arcs")
+    ENDIF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "profile-arcs")
+    IF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "test-coverage")
+      SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage")
+    ENDIF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "test-coverage")
+  ENDIF (ZORBA_WITH_CODE_COVERAGE)
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Wall")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Wall")
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Wextra")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Wextra")
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-D_FILE_OFFSET_BITS")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_FILE_OFFSET_BITS=64")
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-D_FILE_OFFSET_BITS")
+  IF (UNIX AND NOT APPLE)
+    IF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "as-needed")
+      SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
+    ENDIF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "as-needed")
+  ENDIF (UNIX AND NOT APPLE)
+#  # Wabi (Warn when G++ generates code that is probably not compatible with the vendor-neutral C++ ABI.)
+#  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Wabi")
+#    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wabi")
+#  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Wabi")
+  # Warn when a class seems unusable because all the constructors or destructors in that class are private, and it has neither friends nor public static member functions.
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Wctor-dtor-privacy")
+    IF (NOT APPLE)  # apple g++ throws to many of these warnings for boost 
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wctor-dtor-privacy")
+    ENDIF (NOT APPLE)
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Wctor-dtor-privacy")
+#  # Warn about violations of the following style guidelines from Scott Meyers’ Effective C++ book (Problem: std header do not obey this guideline)
+#  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Weffc++")
+#    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++")
+#  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Weffc++")
+#  # Warn if an old-style (C-style) cast to a non-void type is used within a C++ program.
+#  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Wold-style-cast")
+#    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast")
+#  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Wold-style-cast")
+  # Warn when a function declaration hides virtual functions from a base class.
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Woverloaded-virtual")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Woverloaded-virtual")
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Woverloaded-virtual")
+  # Warn when overload resolution chooses a promotion from unsigned or enumerated type to a signed type, over a conversion to an unsigned type of the same size.
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Wsign-promo")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsign-promo")
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Wsign-promo")
+  # Warn about uninitialized variables which are initialized with themselves.
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Winit-self")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Winit-self")
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Winit-self")
+#  # Warn if a user-supplied include directory does not exist.
+#  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Wmissing-include-dirs")
+#    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wmissing-include-dirs")
+#  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Wmissing-include-dirs")
+  # Temporarly supresses the unused parameter warning
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-Wno-unused-parameter")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-Wno-unused-parameter")
+  IF(NOT CMAKE_CXX_FLAGS MATCHES "-fPIC")
+    IF (UNIX AND NOT APPLE AND NOT CYGWIN) # not for mach libraries
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC") 
+    ENDIF (UNIX AND NOT APPLE AND NOT CYGWIN)
+  ENDIF(NOT CMAKE_CXX_FLAGS MATCHES "-fPIC")
+  IF ( ZORBA_GNUCOMPILER_MAJOR_VERSION GREATER 3 )
+    IF (NOT CMAKE_CXX_FLAGS MATCHES "-fvisibility")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+    ENDIF (NOT CMAKE_CXX_FLAGS MATCHES "-fvisibility")
+  ENDIF ( ZORBA_GNUCOMPILER_MAJOR_VERSION GREATER 3 )
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+
+IF(CMAKE_COMPILER_IS_GNUCC)
+  IF (ZORBA_WITH_CODE_COVERAGE)
+    IF (NOT CMAKE_CXX_FLAGS MATCHES "profile-arcs")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs")
+    ENDIF (NOT CMAKE_CXX_FLAGS MATCHES "profile-arcs")
+    IF (NOT CMAKE_CXX_FLAGS MATCHES "test-coverage")
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage")
+    ENDIF (NOT CMAKE_CXX_FLAGS MATCHES "test-coverage")
+    IF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "profile-arcs")
+      SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs")
+    ENDIF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "profile-arcs")
+    IF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "test-coverage")
+      SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage")
+    ENDIF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "test-coverage")
+  ENDIF (ZORBA_WITH_CODE_COVERAGE)
+  IF(NOT CMAKE_C_FLAGS MATCHES "-Wall")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+  ENDIF(NOT CMAKE_C_FLAGS MATCHES "-Wall")
+  IF(NOT CMAKE_C_FLAGS MATCHES "-Wextra")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
+  ENDIF(NOT CMAKE_C_FLAGS MATCHES "-Wextra")
+  IF(NOT CMAKE_C_FLAGS MATCHES "-Wno-unused-parameter")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
+  ENDIF(NOT CMAKE_C_FLAGS MATCHES "-Wno-unused-parameter")
+  # Warn about uninitialized variables which are initialized with themselves.
+  IF(NOT CMAKE_C_FLAGS MATCHES "-Winit-self")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Winit-self")
+  ENDIF(NOT CMAKE_C_FLAGS MATCHES "-Winit-self")
+  # Bug 2936209 - apparently this option doesn't work in 4.0.1 . It seems it doesn't work before 4.2.4 either.
+ COMPARE_VERSION_STRINGS("${ZORBA_GNUCOMPILER_VERSION}" "4.2.4" ZORBA_GNUCOMPILER_COMPARISON)                        
+ IF (ZORBA_GNUCOMPILER_COMPARISON GREATER 0)                                                                        
+   MESSAGE(STATUS "GNU Compiler version greater than 4.0.1")                                                        
+   IF(NOT CMAKE_C_FLAGS MATCHES "-Werror=declaration-after-statement")                                              
+     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=declaration-after-statement")                                      
+   ENDIF(NOT CMAKE_C_FLAGS MATCHES "-Werror=declaration-after-statement")                                           
+ ENDIF (ZORBA_GNUCOMPILER_COMPARISON GREATER 0)
+ 
+  
+  #IF (ZORBA_GNUCOMPILER_VERSION STREQUAL "4.0.1")
+  #  IF(NOT CMAKE_C_FLAGS MATCHES "-Werror=declaration-after-statement")
+  #    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=declaration-after-statement")
+  #  ENDIF(NOT CMAKE_C_FLAGS MATCHES "-Werror=declaration-after-statement")
+  #ENDIF(ZORBA_GNUCOMPILER_VERSION STREQUAL "4.0.1")
+  IF (ZORBA_WITH_CODE_COVERAGE)
+    IF (NOT CMAKE_C_FLAGS MATCHES "profile-arcs")
+      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs")
+    ENDIF (NOT CMAKE_C_FLAGS MATCHES "profile-arcs")
+    IF (NOT CMAKE_C_FLAGS MATCHES "test-coverage")
+      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage")
+    ENDIF (NOT CMAKE_C_FLAGS MATCHES "test-coverage")
+  ENDIF (ZORBA_WITH_CODE_COVERAGE)
+  IF (UNIX AND NOT APPLE)
+    IF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "as-needed")
+      SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
+    ENDIF (NOT CMAKE_SHARED_LINKER_FLAGS MATCHES "as-needed")
+  ENDIF (UNIX AND NOT APPLE)
+  IF(NOT CMAKE_C_FLAGS MATCHES "-fPIC")
+    IF (UNIX AND NOT APPLE AND NOT CYGWIN) # not for mach libraries
+      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC") 
+    ENDIF (UNIX AND NOT APPLE AND NOT CYGWIN)
+  ENDIF(NOT CMAKE_C_FLAGS MATCHES "-fPIC")
+  IF ( ZORBA_GNUCOMPILER_MAJOR_VERSION GREATER 3 )
+    IF (NOT CMAKE_C_FLAGS MATCHES "-fvisibility")
+      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+    ENDIF (NOT CMAKE_C_FLAGS MATCHES "-fvisibility")
+  ENDIF ( ZORBA_GNUCOMPILER_MAJOR_VERSION GREATER 3 )
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
+
+IF (APPLE)
+  # Needed for CFUUID*() functions in util/uuid.c.
+  SET(CMAKE_SHARED_LINKER_FLAGS "-framework CoreFoundation ${CMAKE_SHARED_LINKER_FLAGS}")
+ELSEIF (WIN32)
+  # Needed for UuidCreateSequential() function in util/uuid.c.
+  SET(requiredlibs ${requiredlibs} "Rpcrt4")
+ELSEIF (ZORBA_HAVE_UUID_H)
+  # Needed for uuid_generate() function in util/uuid.c.
+  SET(requiredlibs ${requiredlibs} "uuid")
+  # Double-check that we can link against the required library.
+  CHECK_LIBRARY_EXISTS(uuid uuid_generate "" LIBUUID_EXISTS)
+  IF (NOT LIBUUID_EXISTS)
+    MESSAGE (FATAL_ERROR "Could not find libuuid - required on Linux!")
+  ENDIF (NOT LIBUUID_EXISTS)
+ELSE (APPLE)
+  # We're not Apple or Win32, and we didn't find uuid.h - can't compile
+  MESSAGE (FATAL_ERROR "Could not find uuid/uuid.h header, which is "
+    "required on Linux. On Ubuntu, the 'uuid-dev' package is required; "
+    "look for similar packages on other platforms.")
+ENDIF (APPLE)
