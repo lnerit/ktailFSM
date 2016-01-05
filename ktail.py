@@ -6,6 +6,8 @@ Created on 15/12/2015
 import sys
 import os.path
 import logging
+from sphinx.ext.graphviz import GraphvizError
+import tkMessageBox
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -140,9 +142,11 @@ class kTails(object):
         print 'Equivalent States Identified' + str(group_States(kTails.nodelist))         
         print 'Merged States  ' + str(kTails.mergedlist)                   
         print '***********************************************************************************************************************************************************************************'
-        
-        kTailG=kTailFSMGraph('FSM')
-        kTailG.generateStateTransition(kTails.mergedlist,tmpDict,stateAliasMapList,0)
+        try:
+            kTailG=kTailFSMGraph('FSM')
+            kTailG.generateStateTransition(kTails.mergedlist,tmpDict,stateAliasMapList,0)
+        except "Error":
+            tkMessageBox("Error","An error occured while processing the ktail FSM")
         
     
 class kTailFSMGraph(object):
@@ -271,9 +275,7 @@ class kTailFSMGraph(object):
             sAliasMap={}
             for nx,kvx in kTailFSMGraph.stateMap.items():
                 #n=[State(s) for s in list(getUniqueStates)]
-        
                     sAliasMap=stateAliasList.copy()
-                    print 'yyyyy' +str(sAliasMap)
                     for saKey,saValue in sAliasMap.items():
                         #print saKey,iter(saValue).next()
                         #print iter(saValue).next()
@@ -291,12 +293,16 @@ class kTailFSMGraph(object):
         #Create a state machine
         print '------------------------------------------------------------------------------------'
         #Check if there is existing graph data 
-        graph=get_graph(ktail)
-        if graph!=None:
-            graph.draw('../graph/ktail.png', prog='dot')
-            print graph
-        else:
-            pass
+        try:
+            graph=get_graph(ktail)
+            if graph!=None:
+                graph.draw('../graph/ktail.png', prog='dot')
+                print graph
+            else:
+                pass
+        except GraphvizError:
+            tkMessageBox.ERROR
+            
         print '-------------------------------------------------------------------------------------'
 
     
