@@ -10,6 +10,7 @@ import tkFont
 
 
 
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Tkinter as tk
 import ttk
@@ -25,7 +26,8 @@ win.resizable(width=TRUE, height=TRUE)
 width=win.winfo_screenwidth()
 height=win.winfo_screenheight()
 win.geometry("%dx%d" % (width,height))
-#win.state('zoomed')
+
+#Declare public variables
 fileName=StringVar()
 stateAlias=StringVar()
 traces=StringVar()
@@ -65,10 +67,11 @@ def importTraces():
             for row in contents:
                 textPad.insert(0.0, row)   
         except IOError:
-            tkMessageBox.showinfo("IOError", IOError.message)
+            if len(fName.get())==0 or len(fName.get())==1:
+                tkMessageBox.showinfo("File Error","No trace log file specified.Please selected a log file")
+            else:
+                tkMessageBox.showinfo("IOError", IOError.message)
   
-        
-        
 def text_FromTextBox(txtPad):
         columns[:] = [] #clear existing items in the list
         for line in txtPad:
@@ -109,8 +112,9 @@ def generateAutomata():
             print aliasDict
             
         except "Error":
-            print 'Error'
-        print 'Generate Automata'
+            tkMessageBox.showerror("Error", "An error has occured!")
+            pass
+
         
 def kValueSelectormethod (self):
         print("method is called")
@@ -126,8 +130,6 @@ def generateNewImage(self):
         except IOError:
             tkMessageBox.showerror("File Error", "Error occured while saving image file")
     
-#item=None
- 
 def loadFSMImage():
         try:
             img = PhotoImage(file="../graph/ktail.png")
@@ -139,8 +141,12 @@ def loadFSMImage():
             #item = canvas.create_image(x, y, anchor=tk.CENTER,image=img,tags="bg_img") # <--- Save the return value of the create_* method.
             canvas.create_image(x, y, anchor=tk.CENTER,image=img,tags="bg_img")
         except TclError:
-            generateNewImage
-        return
+            #If image file is missing, we generate a new image file
+            if img==None:
+                generateNewImage
+            else:
+                tkMessageBox.ERROR
+            return
     
 def loadStateAliasToListBox(lst,Listbox):
     Listbox.delete(0, END)
@@ -171,8 +177,10 @@ def configRowCol(objectx,weight):
 def configGrid(objectx,col,row,colspan,rowspan):
     objectx.grid(column=col,row=row,rowspan=rowspan, columnspan=colspan, sticky=(tk.N, tk.S, tk.W, tk.E))
     return objectx
+
 def resize(self, event):
     self.font = tkFont(size = stateDiagramFrame.winfo_height())
+
 def setScrollBar(canvas,frame):
     hbar=Scrollbar(frame,orient=HORIZONTAL)
     hbar.pack(side=BOTTOM,fill=X)
@@ -180,35 +188,23 @@ def setScrollBar(canvas,frame):
     vbar=Scrollbar(frame,orient=VERTICAL)
     vbar.pack(side=RIGHT,fill=Y)
     vbar.config(command=canvas.yview)
-    #canvas.config(width=400,height=400)
     canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
     canvas.pack(side=LEFT,expand=True,fill=BOTH)
-    #canvas.bind('<Configure>',resize)
+    
 
 #Add canvas frame for canvas area to draw image
 #stateDiagramFrame=ttk.Frame(win,text='Finite State Automata',width=400,height=400)
 #stateDiagramFrame=ttk.Frame(win,width=400,height=500)
 
 stateDiagramFrame=ttk.Frame(win)
-#stateDiagramFrame.grid(column=0,row=0,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
-#configGrid(stateDiagramFrame,0,0,1,1)
-#configRowCol(stateDiagramFrame,50)
 stateDiagramFrame.pack(fill = BOTH)
-
-
-#stateDiagramFrame.bind('<Configure>',resize)
-
-
 
 #Build LabelFrame for the objects on the GUI
 objFrame=ttk.LabelFrame(win,text='Trace Input')
-#objFrame.grid(column=0,row=1,rowspan=1, columnspan=1,sticky=(tk.N, tk.S, tk.W, tk.E))
-#configGrid(objFrame,0,1,1,1)
 configRowCol(objFrame,1)
 objFrame.pack(fill=BOTH)
+
 statsFrame=ttk.LabelFrame(win,text='K-Tails Log Information...',width=50,height=100)
-#statsFrame.grid(column=0,row=2,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
-#configGrid(statsFrame,0,2,1,1)
 configRowCol(statsFrame,1)
 statsFrame.pack(fill=BOTH)
 #Add a frame for the stats display text area
@@ -216,7 +212,6 @@ statsTextDisplayFrame=ttk.LabelFrame(statsFrame,text='DisplayLog...',width=50,he
 #statsTextDisplayFrame.grid(column=0,row=2,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
 configGrid(statsTextDisplayFrame,0,2,1,1)
 configRowCol(statsTextDisplayFrame,1)
-#statsTextDisplayFrame.pack(fill = 'x', expand = True,anchor='w')
 
 btnStatsFrame=ttk.LabelFrame(statsFrame,text='---') 
 #btnStatsFrame.grid(column=1,row=2)
@@ -259,7 +254,6 @@ box.pack(side=tk.TOP)
 configRowCol(box,1)
 
 #Add a button inside the tab
-
 btnGenerate=ttk.Button(frmInsideTab1,text="Generate Automata",width=15,command=generateAutomata)
 btnGenerate.pack(side=tk.TOP)
 nb.add(master_foo, text="Main") # add tab to Notebook
@@ -304,18 +298,21 @@ nb.add(master_bar, text="State Alias")
     
 action=ttk.Button(objFrame,text="Open Log",command=fileOpen,width=15)
 action.grid(column=1,row=3)
-#configGrid(btnStatsFrame,1,3,1,1)
 configRowCol(action,1)
 
-#create an Import button which will trigger import event to lo traces into the textPad
-importButton=ttk.Button(objFrame,text="Load Traces",command=importTraces,width=15)
-#importButton.grid(column=1,row=4)
-configGrid(importButton,1,4,1,1)
-configRowCol(importButton,1)
 
 fName=ttk.Entry(objFrame,width=20,textvariable=fileName)
 configGrid(fName,0,3,1,1)
 configRowCol(fName,1)
+#create an Import button which will trigger import event to lo traces into the textPad
+try:
+        importButton=ttk.Button(objFrame,text="Load Traces",command=importTraces,width=15)
+        #importButton.grid(column=1,row=4)
+        configGrid(importButton,1,4,1,1)
+        configRowCol(importButton,1)
+except "Empty Log":
+    pass
+        
     
 textPad = ScrolledText(objFrame, width=30,height=3)
 configGrid(textPad,0,4,1,1)
@@ -326,12 +323,10 @@ label = Label(win) #create a label keep a reference to FSM image called from loa
 
 #Add a text area to display log information     
 statsPad=ScrolledText(statsTextDisplayFrame,width=150,height=12,wrap=WORD,background='black',foreground='green')
-#statsPad.grid(column=0,row=4)
 configGrid(statsPad,0,4,1,1)
 configRowCol(statsPad,1)
 
 #Add a canvas to the stateDiagramFrame
-#canvas=Canvas(stateDiagramFrame,bg='#FFFFFF',width=400,height=420)
 canvas=Canvas(stateDiagramFrame,bg='#FFFFFF',height=420)
 canvas.pack(side="top", fill="both", expand=True)
 
