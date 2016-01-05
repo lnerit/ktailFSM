@@ -5,6 +5,8 @@ from Tkconstants import END, WORD, FALSE, HORIZONTAL, BOTTOM, X, VERTICAL,\
     RIGHT, Y, BOTH, LEFT, W
 from ktail import kTailFSMGraph
 import logging
+from gtk import TRUE
+import tkFont
 
 
 
@@ -19,8 +21,11 @@ import tkMessageBox
 
 win = tk.Tk() 
 win.title("K-TAIL FINITE STATE AUTOMATA")
-win.resizable(width=FALSE, height=FALSE)
-    
+win.resizable(width=TRUE, height=TRUE)
+width=win.winfo_screenwidth()
+height=win.winfo_screenheight()
+win.geometry("%dx%d" % (width,height))
+#win.state('zoomed')
 fileName=StringVar()
 stateAlias=StringVar()
 traces=StringVar()
@@ -166,7 +171,8 @@ def configRowCol(objectx,weight):
 def configGrid(objectx,col,row,colspan,rowspan):
     objectx.grid(column=col,row=row,rowspan=rowspan, columnspan=colspan, sticky=(tk.N, tk.S, tk.W, tk.E))
     return objectx
-
+def resize(self, event):
+    self.font = tkFont(size = stateDiagramFrame.winfo_height())
 def setScrollBar(canvas,frame):
     hbar=Scrollbar(frame,orient=HORIZONTAL)
     hbar.pack(side=BOTTOM,fill=X)
@@ -177,29 +183,40 @@ def setScrollBar(canvas,frame):
     #canvas.config(width=400,height=400)
     canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
     canvas.pack(side=LEFT,expand=True,fill=BOTH)
-    
+    #canvas.bind('<Configure>',resize)
+
 #Add canvas frame for canvas area to draw image
 #stateDiagramFrame=ttk.Frame(win,text='Finite State Automata',width=400,height=400)
-stateDiagramFrame=ttk.Frame(win,width=400,height=500)
+#stateDiagramFrame=ttk.Frame(win,width=400,height=500)
+
+stateDiagramFrame=ttk.Frame(win)
 #stateDiagramFrame.grid(column=0,row=0,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
-configGrid(stateDiagramFrame,0,0,1,1)
-configRowCol(stateDiagramFrame,50)
+#configGrid(stateDiagramFrame,0,0,1,1)
+#configRowCol(stateDiagramFrame,50)
+stateDiagramFrame.pack(fill = BOTH)
+
+
+#stateDiagramFrame.bind('<Configure>',resize)
+
+
 
 #Build LabelFrame for the objects on the GUI
 objFrame=ttk.LabelFrame(win,text='Trace Input')
 #objFrame.grid(column=0,row=1,rowspan=1, columnspan=1,sticky=(tk.N, tk.S, tk.W, tk.E))
-configGrid(objFrame,0,1,1,1)
+#configGrid(objFrame,0,1,1,1)
 configRowCol(objFrame,1)
-
+objFrame.pack(fill=BOTH)
 statsFrame=ttk.LabelFrame(win,text='K-Tails Log Information...',width=50,height=100)
 #statsFrame.grid(column=0,row=2,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
-configGrid(statsFrame,0,2,1,1)
+#configGrid(statsFrame,0,2,1,1)
 configRowCol(statsFrame,1)
+statsFrame.pack(fill=BOTH)
 #Add a frame for the stats display text area
 statsTextDisplayFrame=ttk.LabelFrame(statsFrame,text='DisplayLog...',width=50,height=100)
 #statsTextDisplayFrame.grid(column=0,row=2,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
 configGrid(statsTextDisplayFrame,0,2,1,1)
 configRowCol(statsTextDisplayFrame,1)
+#statsTextDisplayFrame.pack(fill = 'x', expand = True,anchor='w')
 
 btnStatsFrame=ttk.LabelFrame(statsFrame,text='---') 
 #btnStatsFrame.grid(column=1,row=2)
@@ -314,7 +331,8 @@ configGrid(statsPad,0,4,1,1)
 configRowCol(statsPad,1)
 
 #Add a canvas to the stateDiagramFrame
-canvas=Canvas(stateDiagramFrame,bg='#FFFFFF',width=400,height=420)
+#canvas=Canvas(stateDiagramFrame,bg='#FFFFFF',width=400,height=420)
+canvas=Canvas(stateDiagramFrame,bg='#FFFFFF',height=420)
 canvas.pack(side="top", fill="both", expand=True)
 
 #Add a scrollbar for the canvas
@@ -325,9 +343,9 @@ canvas.bind('<5>', lambda event : canvas.xview('scroll', 1, 'units'))
 canvas.focus_set()
 
 #Add a status bar label
-statusBar=Label(win,text="K-TAIL ALGORITHM : ",bd=1,anchor='w',bg='gray',width=152,justify=LEFT)
-statusBar.tkraise()
-statusBar.grid(column=0,row=6)
+#statusBar=Label(win,text="K-TAIL ALGORITHM : ",bd=1,anchor='w',bg='gray',width=152,justify=LEFT)
+#statusBar.tkraise()
+#statusBar.grid(column=0,row=6)
 
 def loadStatsLogToTextBox(k,lst):
     if len(statsPad.get('1.0', END))>0:
