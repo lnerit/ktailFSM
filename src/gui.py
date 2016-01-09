@@ -2,7 +2,7 @@
 import sys
 import os.path
 from Tkconstants import END, WORD, FALSE, HORIZONTAL, BOTTOM, X, VERTICAL,\
-    RIGHT, Y, BOTH, LEFT, W, GROOVE, SINGLE, S
+    RIGHT, Y, BOTH, LEFT, W,SINGLE
 from ktail import kTailFSMGraph
 import logging
 from gtk import TRUE
@@ -10,7 +10,6 @@ import tkFont
 import re
 from fsm import get_graph, FiniteStateMachine, State
 from sphinx.ext.graphviz import GraphvizError
-from numpy import char
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Tkinter as tk
@@ -18,7 +17,7 @@ import ttk
 from tkFileDialog import askopenfilename
 from ScrolledText import *
 from Tkinter import  Canvas, PhotoImage, StringVar, Label, Scrollbar,\
-Listbox, Checkbutton, IntVar, TclError, Menu, Frame, Toplevel
+Listbox, Checkbutton, IntVar, TclError, Menu,Toplevel
 import tkMessageBox
 
 win = tk.Tk() 
@@ -27,7 +26,6 @@ win.resizable(width=TRUE, height=TRUE)
 width=win.winfo_screenwidth()
 height=win.winfo_screenheight()
 win.geometry("%dx%d" % (width,height))
-
 
 #Declare public variables
 fileName=StringVar()
@@ -305,6 +303,7 @@ configRowCol(action,1)
 fName=ttk.Entry(objFrame,width=20,textvariable=fileName)
 configGrid(fName,0,3,1,1)
 configRowCol(fName,1)
+
 #create an Import button which will trigger import event to lo traces into the textPad
 try:
         importButton=ttk.Button(objFrame,text="Load Traces",command=importTraces,width=15)
@@ -313,8 +312,7 @@ try:
         configRowCol(importButton,1)
 except "Empty Log":
     pass
-        
-    
+            
 tracePad = ScrolledText(objFrame, width=30,height=3)
 configGrid(tracePad,0,4,1,1)
 configRowCol(tracePad,1)
@@ -346,8 +344,6 @@ filemenu.add_separator()
 filemenu.add_command(label="Exit", command=win.quit)
 menubar.add_cascade(label="File", menu=filemenu)
 
-# create more pulldown menus
-
 def callChildWindow():
 
     if TraceLoaded(tracePad)==False:
@@ -356,11 +352,7 @@ def callChildWindow():
     else:
         from ktail import kTails
         kt=kTails('K-TAILS')
-        #lst=text_FromTextBox()
         kt.FiniteAutomata(columns)
-        #cw.transitionSelection(kt.manualProcessingLog)
-        #cw.inputTraceForManualTransition(kt.manualProcessingLog)
-        #ChildPopUpWindow.tracelog=kt.manualProcessingLog
         transitionSelection(kt.manualProcessingLog)
         
 editmenu = Menu(menubar, tearoff=0)
@@ -416,71 +408,58 @@ def loadStatsLogToTextBox(k,lst):
 
 
 
+#This segment of code generates a toplevel child window
 #'============================================================='
-def TraceLoaded(ScrolledText):
-            #self.top=Toplevel(master=self.parent)
-            if  len(ScrolledText.get('1.0',END))==0 or len(ScrolledText.get('1.0',END))==1:
-                return False
-            else:
-                return True
-def get_num(x):
-            return (''.join(ele for ele in x if ele.isdigit()))
-        
-def get_apha(x):
-            return str(''.join(re.findall("[a-zA-Z]+", x)))
-            
+#Global variables
 manualMappingList=[]
 transitionDict={}
 stateList=[]
 stateMap1={}
 var=IntVar()
 
-def transitionSelection(tracelog,*args):
+def TraceLoaded(ScrolledText):
+    if  len(ScrolledText.get('1.0',END))==0 or len(ScrolledText.get('1.0',END))==1:
+        return False
+    else:
+        return True
+def get_num(x):
+    return (''.join(ele for ele in x if ele.isdigit()))
         
-            # start of GUI code
-    print tracelog
+def get_apha(x):
+    return str(''.join(re.findall("[a-zA-Z]+", x)))
+            
+def transitionSelection(tracelog,*args):
+    # start of child window GUI code
     root = Toplevel()
     root.title("Manual Transition selection")
     root.resizable(width=FALSE, height=FALSE)
-      # frame
+    
+    # frame
     mainFrame = ttk.Frame(root, width="364", padding="4 4 8 8")
     mainFrame.grid(column=0, row=0)
-    #tracelog=[]
-    var=IntVar()
-                    # input entry
     
-    inValue = StringVar()
-                    #inValueEntry = ttk.Entry(mainFrame, width="20", justify="right", textvariable=inValue)
-                    #inValueEntry.grid(column=1, row=1, sticky="W")
-                    # input unit combobox
-        
+    
     labelSource=ttk.Label(mainFrame,text="Source", justify=LEFT)
     labelSource.grid(column=0, row=0, sticky="e")
         
     srcState = ttk.Combobox(mainFrame,width=10)
     srcState.delete(0, END)
     srcState['values'] = ([k for k in tracelog])
-    srcState.grid(column=1, row=0, sticky="e")
-        
+    srcState.grid(column=1, row=0, sticky="e")        
     srcState.state(['readonly'])
-    #srcState.bind(get_transitionFrom)
+
                     
-        # result label
+        # Destination label
     labelDestination=ttk.Label(mainFrame,text="Destination",justify=LEFT)
     labelDestination.grid(column=0, row=1, sticky="e")
-    outValue = StringVar()
-        #resultLabel = ttk.Label(self.mainFrame, textvariable=outValue)
-        #resultLabel.grid(column=1, row=3, sticky="e")
-                    
-                    # output unit combobox
+       
+    # destination combobox
     destState = ttk.Combobox(mainFrame,width=10)
     destState.delete(0, END)
     destState['values'] = ([get_num(k) for k in tracelog])
     destState.grid(column=1, row=1, sticky="e")
     destState.state(['readonly'])
-        #destState.bind(get_transitionTo)
-                    
-                    
+                  
     listFrame=ttk.LabelFrame(root)
     listFrame.grid(column=0,row=2,sticky="we")
     scrollBar = Scrollbar(listFrame)
@@ -489,7 +468,7 @@ def transitionSelection(tracelog,*args):
     listBoxTop.pack(fill=BOTH)
     scrollBar.config(command=listBoxTop.yview)
     listBoxTop.config(yscrollcommand=scrollBar.set)
-                #listBox.bind('<ButtonRelease-1>',lbItemClicked)  
+    #listBox.bind('<ButtonRelease-1>',lbItemClicked)  
 
                 
     def addItemsToList():
@@ -500,10 +479,9 @@ def transitionSelection(tracelog,*args):
             #else:
             set_listTop(listBoxTop,str(get_num(srcState.get())) +'-->'+ str(destState.get()) + '[label='+st+']')
             manualMappingList.append(str(get_num(srcState.get())) +'-->'+ str(destState.get()))
-            
             transitionDict[get_num(srcState.get())]=st
+            
     def OnDouble():
-        #widget = event.widget
         try:
             if len(listBoxTop.get(0, END))==0 or listBoxTop.curselection() is None:
                 tkMessageBox.showerror("Empty List", "The mapping list is empty")
@@ -512,63 +490,50 @@ def transitionSelection(tracelog,*args):
                 selection=listBoxTop.curselection()
                 value = listBoxTop.get(selection[0])
                 #print "selection:", selection, ": '%s'" % value
-                
+                        
                 ch=''
                 for c in value:
                     if c=='[': #Strip out characters after the symbol [
                         break
                     else:
                         ch +=c
-                    
-            #print 'before ' + str(manualMappingList)
-            manualMappingList.remove(ch)#when we remove an entry from the listbox, we also update the manualmapping list
-            
-            print 'After ' + str(manualMappingList)
-            listBoxTop.delete(selection)
+            #when we remove an entry from the listbox, we also update the manual mapping list
+            manualMappingList.remove(ch)
+            listBoxTop.delete(selection) #remove the selected entry from listbox
         except (IndexError,AttributeError,ValueError):
             tkMessageBox.showerror("Error", "Please select an entry if exists or try again")
         
     def removeMapFromList():
-            """
-            function to read the listbox selection
-            and put the result in an entry widget
-            """
+        """
+        function to read the listbox selection
+        and put the result in an entry widget
+        """
+        try:
             # get selected line index
-            print 'before ' + str(manualMappingList)
-            print listBoxTop.curselection()
             index = listBoxTop.curselection()[0]
             # get the line's text
             manualMappingList.remove(str(listBoxTop.curselection()))
-            seltext=listBoxTop.delete(index)
-
-            print 'ammended ' + manualMappingList
-            print 'index' + str(index)
+            listBoxTop.delete(index)
+        except (ValueError,IndexError):
+            pass
             
     def generateFSMGraph():
-        print manualMappingList
-        print transitionDict
-        print stateList
         
         for e in transitionDict:
-                    print transitionDict[e]
-                    stateMap1[int(e)]={}
-                    for m in manualMappingList:
-                        st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits in a mapping entry
-                        if str(e)==str(st[0]) and str(e)==str(st[1]):
-                        
-                            stateMap1[int(e)][int(st[0])]=transitionDict[e]
-                        elif str(e)!=str(st[1]) and str(e)==str(st[0]):
-                            #print stateMap[z][int(st[1])]
-                            stateMap1[int(e)][int(st[1])]=transitionDict[e]
-                        
-        #print 'statemap1xxx'+str(stateMap1)
+            print transitionDict[e]
+            stateMap1[int(e)]={}
+            for m in manualMappingList:
+                st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits in a mapping entry
+                if str(e)==str(st[0]) and str(e)==str(st[1]):    
+                    stateMap1[int(e)][int(st[0])]=transitionDict[e]
+                elif str(e)!=str(st[1]) and str(e)==str(st[0]):
+                    stateMap1[int(e)][int(st[1])]=transitionDict[e]
+        #callback functions    
         drawStateTransitionGraph()
         loadFSMImage()
-        #self.drawStateTransitionGraph()
+
     def closeWindowTop():
         root.destroy()
-    
-    
     
     #Add a button inside the tab
     btnAdd=ttk.Button(mainFrame,text="Add",width=10,command=addItemsToList)
@@ -596,7 +561,7 @@ def transitionSelection(tracelog,*args):
                 if listbox_entry == sMap:
                     tkMessageBox.showinfo("Entry", "There is already an entry for this transition.")
                     return
-            #print var.get()
+    
             if var.get()=='1':
                 for i, listbox_entry in enumerate(Listbox.get(0, END)):
                     if listbox_entry.contained('*'):
@@ -605,8 +570,7 @@ def transitionSelection(tracelog,*args):
                         Listbox.insert(index, sMap + '*')
             else:
                 Listbox.insert(index, sMap)
-                print var.get()
-            #stateAliasMapList[index]= sMap
+                
     def drawStateTransitionGraph():
         #Here we appy the state transitions to create a finite state machine
         ktail = FiniteStateMachine('K-TAIL')
@@ -617,8 +581,6 @@ def transitionSelection(tracelog,*args):
                 #Define initial state    
                 if nx==0:
                         nx=State(0, initial=True)
-                        #nx.DOT_ATTRS={'shape': 'octagon','height': '0.2'}
-
         #Create a state machine
         print '------------------------------------------------------------------------------------'
         #Check if there is existing graph data 
@@ -632,22 +594,10 @@ def transitionSelection(tracelog,*args):
         except GraphvizError:
             tkMessageBox.ERROR
             
-        
-    def get_transitionFrom():
-            return inValue.get()
-        
-    def get_transitionTo():
-            return outValue.get()
-            
-                #Add a checkbox
-                    # padding for widgets
+    # padding for widgets
     for child in mainFrame.winfo_children(): child.grid_configure(padx=4, pady=4)
-             
-                    # bind keys to convert (auto-update, no button)
-    #root.bind('<KeyRelease>', addItemsToList)
-                       
+                                    
     root.mainloop()
-        
-        
+               
 win.mainloop()
 
