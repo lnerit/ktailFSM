@@ -545,14 +545,15 @@ def transitionSelection(tracelog,*args):
             try:
                 index=Listbox.curselection()[0]
                 #Check if there is an existing entry in the listbox
-                for i,listbox_entry in enumerate(Listbox.get(0, END)):
-                    if listbox_entry == sMap:
-                        tkMessageBox.showinfo("Entry", "There is already an entry for this transition.")
-                        return
-    
-                    Listbox.insert(index, sMap)
             except IndexError:
                 index=END
+            for i,listbox_entry in enumerate(Listbox.get(0, END)):
+                if listbox_entry == sMap:
+                    tkMessageBox.showinfo("Entry", "There is already an entry for this transition.")
+                    return
+    
+            Listbox.insert(index, sMap)
+            
                 
     def drawStateTransitionGraph():
         #Here we appy the state transitions to create a finite state machine
