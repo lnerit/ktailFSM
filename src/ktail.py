@@ -85,7 +85,52 @@ class kTails(object):
     def strEquiv(self):
         self.strEquiv=[]
         return self.strEquiv
+    def manualProcessingLog(self):
+        self.manualProcessingLog=[]
+        return self.manualProcessingLog
     
+    def FiniteAutomata(self,seq):
+        sequence=list(seq) #A list containing sequences of traces
+        #sequence.append('\n')
+        kTails.stateFA=[]
+        kTails.nodelistFA=[[]]
+        #mergedlistFA=[]
+        kTails.strEquivFA=[]
+        tmpDictFA=[]
+        kTails.manualProcessingLog=[]
+        for x in range(0,len(sequence)):
+            kTails.stateFA.append(x)
+            print str(x) + '[label='+sequence[x]+']'
+            self.manualProcessingLog.append(str(x) + '['+sequence[x]+']')
+            
+        mergedlistFA=list(kTails.stateFA) 
+        print 'xxx' +str(mergedlistFA)
+        for i in range(0,len(kTails.stateFA)):
+            #tmpDictFA[i]=sequence[i]  
+            for ind in kTails.stateFA:
+                    if check_equivalence(sequence[i:1+i],sequence[ind+1+i:ind+1+1+i]):       
+                        kTails.nodelistFA.append(set([i,ind+1+i+1]))
+                        
+                        if i in mergedlistFA: 
+                            mergedlistFA[ind+i+1]=i
+                            #print 'StateFAXXX '+ str(kTails.stateFA.index(i))+str(sequence[i:1+i]) + '<-->' + 'State '+ str(kTails.stateFA[ind+i+1]) + \
+                            #    str(sequence[ind+1+i:ind+1+1+i]) + \
+                            #    "-->equivalent strings identified for states: (" #+ \
+                                #str(i) +"," + str(ind+i) +") when k=" + str(1) 
+                                               
+                            #kTails.strEquivFA.append('State '+ str(kTails.stateFA.index(i))+str(sequence[i:+i]) + '<-->' + 'State '+ str(kTails.stateFA[ind+i+1]) + \
+                            #    str(sequence[ind+1+i:ind+1+1+i]) + \
+                            #    "-->equivalent strings identified for states: (" + \
+                            #    str(i) +"," + str(ind+1+i) +") when k=" + str(1)+'\n')
+        
+        print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'         
+        #print 'tmpDictxx ' + str(tmpDictFA)
+        print 'Initial Statesxx ' + str(kTails.stateFA)
+        print 'Equivalent States Identifiedxx' + str(group_States(kTails.nodelistFA))         
+        print 'Merged Statesxx  ' + str(mergedlistFA)                   
+        print '***********************************************************************************************************************************************************************************'
+
+        
     def do_kTailEquivCheck(self,k,seq,stateAliasMapList):
         #self.k=k
         #self.seq=seq
@@ -93,7 +138,7 @@ class kTails(object):
         #event-based model cannot express this, thus the assert.
         #assert(k>0)
         sequence=list(seq) #A list containing sequences of traces
-       
+        self.FiniteAutomata(sequence)
         kTails.state=[]
         kTails.nodelist=[[]]
         kTails.mergedlist=[]
@@ -107,8 +152,7 @@ class kTails(object):
             tmpDict[i]=sequence[i]  
             for ind in kTails.state:
                 #check that the next sequence of k-length strings is not empty
-                #Here assume that the order of the sequence is important
-                    
+                #Here assume that the order of the sequence is important 
                 if (len(sequence[ind+1+i:ind+k+1+i])<k):
                     pass
                 elif ind==None:
@@ -145,9 +189,11 @@ class kTails(object):
         try:
             kTailG=kTailFSMGraph('FSM')
             kTailG.generateStateTransition(kTails.mergedlist,tmpDict,stateAliasMapList,0)
-        except "Error":
+        except (ValueError,AttributeError,EnvironmentError,TypeError):
             tkMessageBox("Error","An error occured while processing the ktail FSM")
-        
+            
+    if __name__ == "__main__":
+        pass
     
 class kTailFSMGraph(object):
     mapping=[]
@@ -194,7 +240,7 @@ class kTailFSMGraph(object):
         for val in ktailx:
             kTailFSMGraph.getUniqueStates.add(val)
         
-        print kTailFSMGraph.getUniqueStates
+        print 'unique states'+ str(kTailFSMGraph.getUniqueStates)
         #Dictionary to keed track of the state and its assocated transition labels
         kTailFSMGraph.transDict={}
         for g in kTailFSMGraph.getUniqueStates:
@@ -234,7 +280,7 @@ class kTailFSMGraph(object):
             for e,f in kTailFSMGraph.transDict.items():
                 if z==e:
                     for m in kTailFSMGraph.mapping:
-                        st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits a mapping entry
+                        st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits in a mapping entry
                         if str(z)==str(st[0]) and str(z)==str(st[1]):
                         #if str(z)==m[-1] and str(z)==m[0]:#Check for occurrance of transition to itself
                             #if m[0] not in stateMap[z]:
@@ -270,7 +316,7 @@ class kTailFSMGraph(object):
                         #nx.DOT_ATTRS={'shape': 'octagon','height': '0.2'}
         elif status==1:
             """
-            This code sectment not inplemented correctly yet
+            This code segment not inplemented correctly yet
             """
             sAliasMap={}
             for nx,kvx in kTailFSMGraph.stateMap.items():
@@ -304,5 +350,6 @@ class kTailFSMGraph(object):
             tkMessageBox.ERROR
             
         print '-------------------------------------------------------------------------------------'
-
+    if __name__ == "__main__":
+        pass
     
