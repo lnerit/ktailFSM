@@ -2,14 +2,15 @@
 import sys
 import os.path
 from Tkconstants import END, WORD, FALSE, HORIZONTAL, BOTTOM, X, VERTICAL,\
-    RIGHT, Y, BOTH, LEFT, W
+    RIGHT, Y, BOTH, LEFT, W, GROOVE, SINGLE, S
 from ktail import kTailFSMGraph
 import logging
 from gtk import TRUE
 import tkFont
-
-
-
+import re
+from fsm import get_graph, FiniteStateMachine, State
+from sphinx.ext.graphviz import GraphvizError
+from numpy import char
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Tkinter as tk
@@ -17,7 +18,7 @@ import ttk
 from tkFileDialog import askopenfilename
 from ScrolledText import *
 from Tkinter import  Canvas, PhotoImage, StringVar, Label, Scrollbar,\
-Listbox, Checkbutton, IntVar, TclError
+Listbox, Checkbutton, IntVar, TclError, Menu, Frame, Toplevel
 import tkMessageBox
 
 win = tk.Tk() 
@@ -26,6 +27,7 @@ win.resizable(width=TRUE, height=TRUE)
 width=win.winfo_screenwidth()
 height=win.winfo_screenheight()
 win.geometry("%dx%d" % (width,height))
+
 
 #Declare public variables
 fileName=StringVar()
@@ -57,7 +59,7 @@ def importTraces():
         #Import Traces from file and display on textPad
         try:
             contents=[]
-            textPad.delete('1.0', END) #clear the textbox before loading traces
+            tracePad.delete('1.0', END) #clear the textbox before loading traces
             with open(fName.get(), 'r') as my_file:
                 for line in my_file:
                     #contents.append(line.rstrip().split(','))
@@ -65,7 +67,7 @@ def importTraces():
                     contents.append(line)
                 
             for row in contents:
-                textPad.insert(0.0, row)   
+                tracePad.insert(0.0, row)   
         except IOError:
             if len(fName.get())==0 or len(fName.get())==1:
                 tkMessageBox.showinfo("File Error","No trace log file specified.Please selected a log file")
@@ -84,11 +86,11 @@ def text_FromTextBox(txtPad):
 def generateAutomata():
         import time
         start_time=time.time()
-        if len(textPad.get('1.0',END))==0 or len(textPad.get('1.0',END))==1:
+        if len(tracePad.get('1.0',END))==0 or len(tracePad.get('1.0',END))==1:
             tkMessageBox.showinfo("Empty trace","The trace is empty.Please select a trace log.")
             return
         try:
-            text_FromTextBox(textPad.get('1.0', END).split(','))
+            text_FromTextBox(tracePad.get('1.0', END).split(','))
             statsPad.configure(state='normal')
             loadEquivalentState=loadStatsLogToTextBox(int(box.get()),columns)
 
@@ -138,7 +140,6 @@ def loadFSMImage():
             imgHeight1 =canvas.winfo_height()
             x = (imgWidth1)/2.0
             y = (imgHeight1)/2.0
-            #item = canvas.create_image(x, y, anchor=tk.CENTER,image=img,tags="bg_img") # <--- Save the return value of the create_* method.
             canvas.create_image(x, y, anchor=tk.CENTER,image=img,tags="bg_img")
         except TclError:
             #If image file is missing, we generate a new image file
@@ -204,9 +205,9 @@ objFrame=ttk.LabelFrame(win,text='Trace Input')
 configRowCol(objFrame,1)
 objFrame.pack(fill=BOTH)
 
-statsFrame=ttk.LabelFrame(win,text='K-Tails Log Information...',width=50,height=100)
+statsFrame=ttk.LabelFrame(win,text='K-Tails Log Information...',width=50,height=200)
 configRowCol(statsFrame,1)
-statsFrame.pack(fill=BOTH)
+statsFrame.pack(fill=BOTH,anchor='s')
 #Add a frame for the stats display text area
 statsTextDisplayFrame=ttk.LabelFrame(statsFrame,text='DisplayLog...',width=50,height=100)
 #statsTextDisplayFrame.grid(column=0,row=2,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
@@ -231,7 +232,7 @@ try:
 except TclError:
     tkMessageBox.showerror("Icon Error", "Unable to load icon")
     
-nb = ttk.Notebook(btnStatsFrame, name='nb') # create Notebook in "master"
+nb = ttk.Notebook(btnStatsFrame, name='nb') # create Notebook in "btnStatsFrame"
 nb.pack(fill=BOTH) # fill "master" but pad sides
 
 # create each Notebook tab in a Frame
@@ -314,9 +315,9 @@ except "Empty Log":
     pass
         
     
-textPad = ScrolledText(objFrame, width=30,height=3)
-configGrid(textPad,0,4,1,1)
-configRowCol(textPad,1)
+tracePad = ScrolledText(objFrame, width=30,height=3)
+configGrid(tracePad,0,4,1,1)
+configRowCol(tracePad,1)
 
 configRowCol(btnGenerate,1)
 label = Label(win) #create a label keep a reference to FSM image called from loadFSMImage function
@@ -337,6 +338,39 @@ canvas.bind('<4>', lambda event : canvas.xview('scroll', -1, 'units'))
 canvas.bind('<5>', lambda event : canvas.xview('scroll', 1, 'units'))
 canvas.focus_set()
 
+# create a pulldown menu, and add it to the menu bar
+menubar = Menu(win)
+filemenu = Menu(menubar, tearoff=0)
+filemenu.add_command(label="Open Log", command=fileOpen)
+filemenu.add_separator()
+filemenu.add_command(label="Exit", command=win.quit)
+menubar.add_cascade(label="File", menu=filemenu)
+
+# create more pulldown menus
+
+def callChildWindow():
+
+    if TraceLoaded(tracePad)==False:
+        tkMessageBox.showerror("No trace Log", "Please load traces first.")
+        return
+    else:
+        from ktail import kTails
+        kt=kTails('K-TAILS')
+        #lst=text_FromTextBox()
+        kt.FiniteAutomata(columns)
+        #cw.transitionSelection(kt.manualProcessingLog)
+        #cw.inputTraceForManualTransition(kt.manualProcessingLog)
+        #ChildPopUpWindow.tracelog=kt.manualProcessingLog
+        transitionSelection(kt.manualProcessingLog)
+        
+editmenu = Menu(menubar, tearoff=0)
+editmenu.add_command(label="Set Manual", command=callChildWindow)
+menubar.add_cascade(label="Manual Setting", menu=editmenu)
+# display the menu
+win.config(menu=menubar)
+
+
+
 #Add a status bar label
 #statusBar=Label(win,text="K-TAIL ALGORITHM : ",bd=1,anchor='w',bg='gray',width=152,justify=LEFT)
 #statusBar.tkraise()
@@ -345,40 +379,275 @@ canvas.focus_set()
 def loadStatsLogToTextBox(k,lst):
     if len(statsPad.get('1.0', END))>0:
         statsPad.delete('1.0', END)
-            
-    from ktail import kTails
-    kt=kTails('K-TAILS')
-    kt.do_kTailEquivCheck(k, lst,stateAliasMapList)
-    ktfsm=kTailFSMGraph('FSM')
-    
-    statsPad.insert(END,'Identifying Equivalent k-tails (k=' + str(box.get()) +')\n')
-    statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
-    if len(kt.strEquiv)==0:
-        statsPad.insert(END, str('No Equivalent k-tails found with k=' + str(box.get())) +'\n')
+    try:  
+        from ktail import kTails
+        kt=kTails('K-TAILS')
+        kt.do_kTailEquivCheck(k, lst,stateAliasMapList)
+        ktfsm=kTailFSMGraph('FSM')
         
-    for streq in kt.strEquiv:
-        statsPad.insert(END, str(streq)) #+ '\n')
+        statsPad.insert(END,'Identifying Equivalent k-tails (k=' + str(box.get()) +')\n')
+        statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
+        if len(kt.strEquiv)==0:
+            statsPad.insert(END, str('No Equivalent k-tails found with k=' + str(box.get())) +'\n')
+            
+        for streq in kt.strEquiv:
+            statsPad.insert(END, str(streq)) #+ '\n')
+        
+        statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
+        statsPad.insert(END, 'Initial States: ' +str(kt.state)+ '\n')
+        statsPad.insert(END, 'Equivalent States: ' +str(kt.nodelist)+ '\n')
+        statsPad.insert(END, 'Merged States :' + str(kt.mergedlist)+ '\n')
+        statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
     
-    statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
-    statsPad.insert(END, 'Initial States + Corresponding labels : ' +str(kt.state)+ '\n')
-    statsPad.insert(END, 'Equivalent States: ' +str(kt.nodelist)+ '\n')
-    statsPad.insert(END, 'Merged States :' + str(kt.mergedlist)+ '\n')
-    statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
-
-    statsPad.insert(END,'Mapping : ' +str(ktfsm.mapping) +'\n')
-    statsPad.insert(END,'State Map : '+str(ktfsm.stateMap) +'\n')
-    statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
-    statsPad.insert(END,'Finalised States: '+ str(kTailFSMGraph.getUniqueStates)+'\n')
-    statsPad.insert(END,'State-Label: '+ str(kTailFSMGraph.transDict)+'\n')
-    statsPad.insert(END,'State Transitions:-----------------------------------------------------------------------------------------------------------------\n')
-    for nx,kvx in ktfsm.stateMap.items():
-            for c in kvx:
-                statsPad.insert(END,str(nx) + '-->'+str(c) + '[label='+kvx[c] +']\n')
-
-    statsPad.insert(END,'***********************************************************************************************************************************\n')
-    statsPad.configure(state='disabled')
+        statsPad.insert(END,'Mapping : ' +str(ktfsm.mapping) +'\n')
+        statsPad.insert(END,'State Map : '+str(ktfsm.stateMap) +'\n')
+        statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
+        statsPad.insert(END,'Finalised States: '+ str(kTailFSMGraph.getUniqueStates)+'\n')
+        statsPad.insert(END,'State-Label: '+ str(kTailFSMGraph.transDict)+'\n')
+        statsPad.insert(END,'State Transitions:-----------------------------------------------------------------------------------------------------------------\n')
+        for nx,kvx in ktfsm.stateMap.items():
+                for c in kvx:
+                    statsPad.insert(END,str(nx) + '-->'+str(c) + '[label='+kvx[c] +']\n')
     
+        statsPad.insert(END,'***********************************************************************************************************************************\n')
+        statsPad.configure(state='disabled')
+    except "Error":
+        tkMessageBox.ERROR
+
+
+
+#'============================================================='
+def TraceLoaded(ScrolledText):
+            #self.top=Toplevel(master=self.parent)
+            if  len(ScrolledText.get('1.0',END))==0 or len(ScrolledText.get('1.0',END))==1:
+                return False
+            else:
+                return True
+def get_num(x):
+            return (''.join(ele for ele in x if ele.isdigit()))
+        
+def get_apha(x):
+            return str(''.join(re.findall("[a-zA-Z]+", x)))
+            
+manualMappingList=[]
+transitionDict={}
+stateList=[]
+stateMap1={}
+var=IntVar()
+
+def transitionSelection(tracelog,*args):
+        
+            # start of GUI code
+    print tracelog
+    root = Toplevel()
+    root.title("Manual Transition selection")
+    root.resizable(width=FALSE, height=FALSE)
+      # frame
+    mainFrame = ttk.Frame(root, width="364", padding="4 4 8 8")
+    mainFrame.grid(column=0, row=0)
+    #tracelog=[]
+    var=IntVar()
+                    # input entry
+    
+    inValue = StringVar()
+                    #inValueEntry = ttk.Entry(mainFrame, width="20", justify="right", textvariable=inValue)
+                    #inValueEntry.grid(column=1, row=1, sticky="W")
+                    # input unit combobox
+        
+    labelSource=ttk.Label(mainFrame,text="Source", justify=LEFT)
+    labelSource.grid(column=0, row=0, sticky="e")
+        
+    srcState = ttk.Combobox(mainFrame,width=10)
+    srcState.delete(0, END)
+    srcState['values'] = ([k for k in tracelog])
+    srcState.grid(column=1, row=0, sticky="e")
+        
+    srcState.state(['readonly'])
+    #srcState.bind(get_transitionFrom)
+                    
+        # result label
+    labelDestination=ttk.Label(mainFrame,text="Destination",justify=LEFT)
+    labelDestination.grid(column=0, row=1, sticky="e")
+    outValue = StringVar()
+        #resultLabel = ttk.Label(self.mainFrame, textvariable=outValue)
+        #resultLabel.grid(column=1, row=3, sticky="e")
+                    
+                    # output unit combobox
+    destState = ttk.Combobox(mainFrame,width=10)
+    destState.delete(0, END)
+    destState['values'] = ([get_num(k) for k in tracelog])
+    destState.grid(column=1, row=1, sticky="e")
+    destState.state(['readonly'])
+        #destState.bind(get_transitionTo)
+                    
+                    
+    listFrame=ttk.LabelFrame(root)
+    listFrame.grid(column=0,row=2,sticky="we")
+    scrollBar = Scrollbar(listFrame)
+    scrollBar.pack(side=RIGHT, fill=Y)
+    listBoxTop = Listbox(listFrame, selectmode=SINGLE,width=20,height=10)
+    listBoxTop.pack(fill=BOTH)
+    scrollBar.config(command=listBoxTop.yview)
+    listBoxTop.config(yscrollcommand=scrollBar.set)
+                #listBox.bind('<ButtonRelease-1>',lbItemClicked)  
+
+                
+    def addItemsToList():
+            st=get_apha(srcState.get())
+            #if int(self.get_num(self.srcState.get()))==0:#Indicate the source state with a *
+            #    self.set_list(self.listBox,'*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
+            #    manualMappingList.append('*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
+            #else:
+            set_listTop(listBoxTop,str(get_num(srcState.get())) +'-->'+ str(destState.get()) + '[label='+st+']')
+            manualMappingList.append(str(get_num(srcState.get())) +'-->'+ str(destState.get()))
+            
+            transitionDict[get_num(srcState.get())]=st
+    def OnDouble():
+        #widget = event.widget
+        try:
+            if len(listBoxTop.get(0, END))==0 or listBoxTop.curselection() is None:
+                tkMessageBox.showerror("Empty List", "The mapping list is empty")
+                return
+            else:
+                selection=listBoxTop.curselection()
+                value = listBoxTop.get(selection[0])
+                #print "selection:", selection, ": '%s'" % value
+                
+                ch=''
+                for c in value:
+                    if c=='[': #Strip out characters after the symbol [
+                        break
+                    else:
+                        ch +=c
+                    
+            #print 'before ' + str(manualMappingList)
+            manualMappingList.remove(ch)#when we remove an entry from the listbox, we also update the manualmapping list
+            
+            print 'After ' + str(manualMappingList)
+            listBoxTop.delete(selection)
+        except (IndexError,AttributeError,ValueError):
+            tkMessageBox.showerror("Error", "Please select an entry if exists or try again")
+        
+    def removeMapFromList():
+            """
+            function to read the listbox selection
+            and put the result in an entry widget
+            """
+            # get selected line index
+            print 'before ' + str(manualMappingList)
+            print listBoxTop.curselection()
+            index = listBoxTop.curselection()[0]
+            # get the line's text
+            manualMappingList.remove(str(listBoxTop.curselection()))
+            seltext=listBoxTop.delete(index)
+
+            print 'ammended ' + manualMappingList
+            print 'index' + str(index)
+            
+    def generateFSMGraph():
+        print manualMappingList
+        print transitionDict
+        print stateList
+        
+        for e in transitionDict:
+                    print transitionDict[e]
+                    stateMap1[int(e)]={}
+                    for m in manualMappingList:
+                        st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits in a mapping entry
+                        if str(e)==str(st[0]) and str(e)==str(st[1]):
+                        
+                            stateMap1[int(e)][int(st[0])]=transitionDict[e]
+                        elif str(e)!=str(st[1]) and str(e)==str(st[0]):
+                            #print stateMap[z][int(st[1])]
+                            stateMap1[int(e)][int(st[1])]=transitionDict[e]
+                        
+        #print 'statemap1xxx'+str(stateMap1)
+        drawStateTransitionGraph()
+        loadFSMImage()
+        #self.drawStateTransitionGraph()
+    def closeWindowTop():
+        root.destroy()
+    
+    
+    
+    #Add a button inside the tab
+    btnAdd=ttk.Button(mainFrame,text="Add",width=10,command=addItemsToList)
+    btnAdd.grid(column=2,row=0)
+                    
+    btnRemove=ttk.Button(mainFrame,text="Remove",width=10,command=OnDouble)
+    btnRemove.grid(column=2,row=1)
+    
+    btnFrame=ttk.LabelFrame(root)
+    btnFrame.grid(column=0,row=3,sticky="we")
+    btnCancel=ttk.Button(btnFrame,text="Cancel",width=13,command=closeWindowTop)
+    btnCancel.pack(side=RIGHT,fill=X)
+    btnOk=ttk.Button(btnFrame,text="Generate FSM",width=13,command=generateFSMGraph)
+    btnOk.pack(side=RIGHT, fill=X)
+  
+    def set_listTop(Listbox,sMap):
+            try:
+                index=Listbox.curselection()[0]
+                #delete the old listbox line
+                #Listbox.delete(index)
+            except IndexError:
+                index=END
+            
+            for i, listbox_entry in enumerate(Listbox.get(0, END)):
+                if listbox_entry == sMap:
+                    tkMessageBox.showinfo("Entry", "There is already an entry for this transition.")
+                    return
+            #print var.get()
+            if var.get()=='1':
+                for i, listbox_entry in enumerate(Listbox.get(0, END)):
+                    if listbox_entry.contained('*'):
+                        Listbox.delete(i)
+                        Listbox.insert(i,listbox_entry.strip('*'))
+                        Listbox.insert(index, sMap + '*')
+            else:
+                Listbox.insert(index, sMap)
+                print var.get()
+            #stateAliasMapList[index]= sMap
+    def drawStateTransitionGraph():
+        #Here we appy the state transitions to create a finite state machine
+        ktail = FiniteStateMachine('K-TAIL')
+        for nx,kvx in stateMap1.items():
+                for c in kvx:
+                    State(nx).update({kvx[c]:State(c)})
+                    print 'State Transition: ' +str(nx) + '-->'+str(c) + '[label='+kvx[c] +']'
+                #Define initial state    
+                if nx==0:
+                        nx=State(0, initial=True)
+                        #nx.DOT_ATTRS={'shape': 'octagon','height': '0.2'}
+
+        #Create a state machine
+        print '------------------------------------------------------------------------------------'
+        #Check if there is existing graph data 
+        try:
+            graph=get_graph(ktail)
+            if graph!=None:
+                graph.draw('../graph/ktail.png', prog='dot')
+                print graph
+            else:
+                pass
+        except GraphvizError:
+            tkMessageBox.ERROR
+            
+        
+    def get_transitionFrom():
+            return inValue.get()
+        
+    def get_transitionTo():
+            return outValue.get()
+            
+                #Add a checkbox
+                    # padding for widgets
+    for child in mainFrame.winfo_children(): child.grid_configure(padx=4, pady=4)
+             
+                    # bind keys to convert (auto-update, no button)
+    #root.bind('<KeyRelease>', addItemsToList)
+                       
+    root.mainloop()
+        
+        
 win.mainloop()
 
-    
-    
