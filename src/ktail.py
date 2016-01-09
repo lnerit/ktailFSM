@@ -39,9 +39,6 @@ def group_States(nodelist):
         #try:
         if len(sets)==0:
             pass
-            #else:
-            #print 'Equivalent States ' + str(sets)
-            #except:ValueError
         return sets          
 
 
@@ -91,12 +88,10 @@ class kTails(object):
     
     def FiniteAutomata(self,seq):
         sequence=list(seq) #A list containing sequences of traces
-        #sequence.append('\n')
         kTails.stateFA=[]
         kTails.nodelistFA=[[]]
-        #mergedlistFA=[]
         kTails.strEquivFA=[]
-        tmpDictFA=[]
+        
         kTails.manualProcessingLog=[]
         for x in range(0,len(sequence)):
             kTails.stateFA.append(x)
@@ -104,15 +99,14 @@ class kTails(object):
             self.manualProcessingLog.append(str(x) + '['+sequence[x]+']')
             
         mergedlistFA=list(kTails.stateFA) 
-        print 'xxx' +str(mergedlistFA)
+        
         for i in range(0,len(kTails.stateFA)):
             #tmpDictFA[i]=sequence[i]  
             for ind in kTails.stateFA:
-                    if check_equivalence(sequence[i:1+i],sequence[ind+1+i:ind+1+1+i]):       
-                        kTails.nodelistFA.append(set([i,ind+1+i+1]))
-                        
-                        if i in mergedlistFA: 
-                            mergedlistFA[ind+i+1]=i
+                if check_equivalence(sequence[i:1+i],sequence[ind+1+i:ind+1+1+i]):       
+                    kTails.nodelistFA.append(set([i,ind+1+i+1]))
+                    if i in mergedlistFA: 
+                        mergedlistFA[ind+i+1]=i
                             #print 'StateFAXXX '+ str(kTails.stateFA.index(i))+str(sequence[i:1+i]) + '<-->' + 'State '+ str(kTails.stateFA[ind+i+1]) + \
                             #    str(sequence[ind+1+i:ind+1+1+i]) + \
                             #    "-->equivalent strings identified for states: (" #+ \
@@ -123,20 +117,19 @@ class kTails(object):
                             #    "-->equivalent strings identified for states: (" + \
                             #    str(i) +"," + str(ind+1+i) +") when k=" + str(1)+'\n')
         
-        print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'         
+        #print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'         
         #print 'tmpDictxx ' + str(tmpDictFA)
-        print 'Initial Statesxx ' + str(kTails.stateFA)
-        print 'Equivalent States Identifiedxx' + str(group_States(kTails.nodelistFA))         
-        print 'Merged Statesxx  ' + str(mergedlistFA)                   
-        print '***********************************************************************************************************************************************************************************'
+        #print 'Initial Statesxx ' + str(kTails.stateFA)
+        #print 'Equivalent States Identifiedxx' + str(group_States(kTails.nodelistFA))         
+        #print 'Merged Statesxx  ' + str(mergedlistFA)                   
+        #print '***********************************************************************************************************************************************************************************'
 
         
     def do_kTailEquivCheck(self,k,seq,stateAliasMapList):
-        #self.k=k
-        #self.seq=seq
+
         #Note: at k == 0, all "states" should be considered equal, but an
         #event-based model cannot express this, thus the assert.
-        #assert(k>0)
+        assert(k>0)
         sequence=list(seq) #A list containing sequences of traces
         self.FiniteAutomata(sequence)
         kTails.state=[]
@@ -179,7 +172,6 @@ class kTails(object):
                                 "-->equivalent strings identified for states: (" + \
                                 str(i) +"," + str(ind+1+i) +") when k=" + str(k)+'\n')
 
-        
         print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'         
         print 'tmpDict ' + str(tmpDict)
         print 'Initial States ' + str(kTails.state)
@@ -226,13 +218,8 @@ class kTailFSMGraph(object):
     def generateStateTransition(self,loadEquiState,tmpDictx,stateAliasList,status):
         ktailx=loadEquiState
         
-        #print 'transition ' + str(ktailx)
-        
         if len(ktailx)==0:
             pass
-        #for mv in ktailx:
-        #    if mv==match_Values(ktailx):
-
         
         #Identify unique states from the merged state list
         kTailFSMGraph.getUniqueStates = set()
@@ -270,11 +257,8 @@ class kTailFSMGraph(object):
         kTailFSMGraph.stateMap={}
         print kTailFSMGraph.transDict
         for td,tv in kTailFSMGraph.transDict.items():
-            #for tm in mapping:
-            #    stm=[int(s) for s in tm.split('-->') if s.isdigit()]
-            #    if str(td)==stm[0]:
-                    #stateMap[td]={ tv:' '}  #Intialize the embedded dictionary with empty string for each state
-                    kTailFSMGraph.stateMap[td]={}  #The embedded dictionary stores the next transition state with the 
+            #Intialize the embedded dictionary with empty string for each state
+            kTailFSMGraph.stateMap[td]={} #The embedded dictionary stores the next transition state with the 
                     #transition label as the key.
         for z in kTailFSMGraph.getUniqueStates:
             for e,f in kTailFSMGraph.transDict.items():
@@ -282,10 +266,7 @@ class kTailFSMGraph(object):
                     for m in kTailFSMGraph.mapping:
                         st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits in a mapping entry
                         if str(z)==str(st[0]) and str(z)==str(st[1]):
-                        #if str(z)==m[-1] and str(z)==m[0]:#Check for occurrance of transition to itself
-                            #if m[0] not in stateMap[z]:
                             kTailFSMGraph.stateMap[z][int(st[0])]=f
-                            #print 'x'+stateMap[z][m[-1]] + m
                             #Check if the transition from the current node
                             #to the next node is the same as the self-transition on current node
                             #If so then we assign and arbitrary label-as it might cause non-deterministic fsm
@@ -323,8 +304,6 @@ class kTailFSMGraph(object):
                 #n=[State(s) for s in list(getUniqueStates)]
                     sAliasMap=stateAliasList.copy()
                     for saKey,saValue in sAliasMap.items():
-                        #print saKey,iter(saValue).next()
-                        #print iter(saValue).next()
                         print saValue
                         if nx==saKey:
                             #check for the embedded key having same state alias
