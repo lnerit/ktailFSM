@@ -82,38 +82,36 @@ def text_FromTextBox(txtPad):
         return str(columns)
      
 def generateAutomata():
-        import time
-        start_time=time.time()
-        if len(tracePad.get('1.0',END))==0 or len(tracePad.get('1.0',END))==1:
-            tkMessageBox.showinfo("Empty trace","The trace is empty.Please select a trace log.")
-            return
-        try:
-            text_FromTextBox(tracePad.get('1.0', END).split(','))
-            statsPad.configure(state='normal')
-            loadEquivalentState=loadStatsLogToTextBox(int(box.get()),columns)
+    import time
+    start_time=time.time()
+    if len(tracePad.get('1.0',END))==0 or len(tracePad.get('1.0',END))==1:
+        tkMessageBox.showinfo("Empty trace","The trace is empty.Please select a trace log.")
+        return
+    try:
+        text_FromTextBox(tracePad.get('1.0', END).split(','))
+        statsPad.configure(state='normal')
+        loadEquivalentState=loadStatsLogToTextBox(int(box.get()),columns)
 
-            #load image to canvas
-            loadFSMImage()
-            #print 'statemap called from GUI'+str(kTailFSMGraph.stateMap)
-            stateMapCopy=kTailFSMGraph.stateMap.copy()
-            #replace the embedded dictionary (states) keys with the state alias
-            
-            #Check if the checkbox is checked or not
-            if int(var1.get())==0:
-                loadStateAliasToListBox(kTailFSMGraph.getUniqueStates, listBox)
+        #load image to canvas
+        loadFSMImage()
+        #print 'statemap called from GUI'+str(kTailFSMGraph.stateMap)
+       
+        #Check if the checkbox is checked or not
+        if int(var1.get())==0:
+            loadStateAliasToListBox(kTailFSMGraph.getUniqueStates, listBox)
                 
-            #We iterate throug the stateamp dictionary replace each state keys with the alias names
-            print("--- %s seconds ---" % (time.time() - start_time))
-            for k,v in stateMapCopy.items():
-                print k,v   
-            aliasDict={}
-            for s in kTailFSMGraph.getUniqueStates:
-                aliasDict[s]={}
-            print aliasDict
+        #We iterate throug the stateamp dictionary replace each state keys with the alias names
+        print("--- %s seconds ---" % (time.time() - start_time))
+        #for k,v in stateMapCopy.items():
+        #    print k,v   
+        aliasDict={}
+        for s in kTailFSMGraph.getUniqueStates:
+            aliasDict[s]={}
+        print aliasDict
             
-        except "Error":
-            tkMessageBox.showerror("Error", "An error has occured!")
-            pass
+    except "Error":
+        tkMessageBox.showerror("Error", "An error has occured!")
+        pass
 
         
 def kValueSelectormethod (self):
@@ -131,21 +129,21 @@ def generateNewImage(self):
             tkMessageBox.showerror("File Error", "Error occured while saving image file")
     
 def loadFSMImage():
-        try:
-            img = PhotoImage(file="../graph/ktail.png")
-            label.image = img # keep a reference!
-            imgWidth1 = canvas.winfo_width()
-            imgHeight1 =canvas.winfo_height()
-            x = (imgWidth1)/2.0
-            y = (imgHeight1)/2.0
-            canvas.create_image(x, y, anchor=tk.CENTER,image=img,tags="bg_img")
-        except TclError:
-            #If image file is missing, we generate a new image file
-            if img==None:
-                generateNewImage
-            else:
-                tkMessageBox.ERROR
-            return
+    try:
+        img = PhotoImage(file="../graph/ktail.png")
+        label.image = img # keep a reference!
+        imgWidth1 = canvas.winfo_width()
+        imgHeight1 =canvas.winfo_height()
+        x = (imgWidth1)/2.0
+        y = (imgHeight1)/2.0
+        canvas.create_image(x, y, anchor=tk.CENTER,image=img,tags="bg_img")
+    except TclError:
+        #If image file is missing, we generate a new image file
+        if img==None:
+            generateNewImage
+        else:
+            tkMessageBox.ERROR
+        return
     
 def loadStateAliasToListBox(lst,Listbox):
     Listbox.delete(0, END)
@@ -361,8 +359,6 @@ menubar.add_cascade(label="Manual Setting", menu=editmenu)
 # display the menu
 win.config(menu=menubar)
 
-
-
 #Add a status bar label
 #statusBar=Label(win,text="K-TAIL ALGORITHM : ",bd=1,anchor='w',bg='gray',width=152,justify=LEFT)
 #statusBar.tkraise()
@@ -438,7 +434,6 @@ def transitionSelection(tracelog,*args):
     mainFrame = ttk.Frame(root, width="364", padding="4 4 8 8")
     mainFrame.grid(column=0, row=0)
     
-    
     labelSource=ttk.Label(mainFrame,text="Source", justify=LEFT)
     labelSource.grid(column=0, row=0, sticky="e")
         
@@ -447,9 +442,8 @@ def transitionSelection(tracelog,*args):
     srcState['values'] = ([k for k in tracelog])
     srcState.grid(column=1, row=0, sticky="e")        
     srcState.state(['readonly'])
-
-                    
-        # Destination label
+       
+    # Destination label
     labelDestination=ttk.Label(mainFrame,text="Destination",justify=LEFT)
     labelDestination.grid(column=0, row=1, sticky="e")
        
@@ -468,18 +462,16 @@ def transitionSelection(tracelog,*args):
     listBoxTop.pack(fill=BOTH)
     scrollBar.config(command=listBoxTop.yview)
     listBoxTop.config(yscrollcommand=scrollBar.set)
-    #listBox.bind('<ButtonRelease-1>',lbItemClicked)  
-
                 
     def addItemsToList():
-            st=get_apha(srcState.get())
-            #if int(self.get_num(self.srcState.get()))==0:#Indicate the source state with a *
-            #    self.set_list(self.listBox,'*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
-            #    manualMappingList.append('*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
-            #else:
-            set_listTop(listBoxTop,str(get_num(srcState.get())) +'-->'+ str(destState.get()) + '[label='+st+']')
-            manualMappingList.append(str(get_num(srcState.get())) +'-->'+ str(destState.get()))
-            transitionDict[get_num(srcState.get())]=st
+        st=get_apha(srcState.get())
+        #if int(self.get_num(self.srcState.get()))==0:#Indicate the source state with a *
+        #    self.set_list(self.listBox,'*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
+        #    manualMappingList.append('*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
+        #else:
+        set_listTop(listBoxTop,str(get_num(srcState.get())) +'-->'+ str(destState.get()) + '[label='+st+']')
+        manualMappingList.append(str(get_num(srcState.get())) +'-->'+ str(destState.get()))
+        transitionDict[get_num(srcState.get())]=st
             
     def OnDouble():
         try:
@@ -537,11 +529,11 @@ def transitionSelection(tracelog,*args):
     
     #Add a button inside the tab
     btnAdd=ttk.Button(mainFrame,text="Add",width=10,command=addItemsToList)
-    btnAdd.grid(column=2,row=0)
-                    
+    btnAdd.grid(column=2,row=0)                
     btnRemove=ttk.Button(mainFrame,text="Remove",width=10,command=OnDouble)
     btnRemove.grid(column=2,row=1)
     
+    #Add frame to hold buttons
     btnFrame=ttk.LabelFrame(root)
     btnFrame.grid(column=0,row=3,sticky="we")
     btnCancel=ttk.Button(btnFrame,text="Cancel",width=13,command=closeWindowTop)
@@ -552,24 +544,15 @@ def transitionSelection(tracelog,*args):
     def set_listTop(Listbox,sMap):
             try:
                 index=Listbox.curselection()[0]
-                #delete the old listbox line
-                #Listbox.delete(index)
+                #Check if there is an existing entry in the listbox
+                for i,listbox_entry in enumerate(Listbox.get(0, END)):
+                    if listbox_entry == sMap:
+                        tkMessageBox.showinfo("Entry", "There is already an entry for this transition.")
+                        return
+    
+                    Listbox.insert(index, sMap)
             except IndexError:
                 index=END
-            
-            for i, listbox_entry in enumerate(Listbox.get(0, END)):
-                if listbox_entry == sMap:
-                    tkMessageBox.showinfo("Entry", "There is already an entry for this transition.")
-                    return
-    
-            if var.get()=='1':
-                for i, listbox_entry in enumerate(Listbox.get(0, END)):
-                    if listbox_entry.contained('*'):
-                        Listbox.delete(i)
-                        Listbox.insert(i,listbox_entry.strip('*'))
-                        Listbox.insert(index, sMap + '*')
-            else:
-                Listbox.insert(index, sMap)
                 
     def drawStateTransitionGraph():
         #Here we appy the state transitions to create a finite state machine
