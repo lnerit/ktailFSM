@@ -95,7 +95,7 @@ class kTails(object):
         kTails.manualProcessingLog=[]
         for x in range(0,len(sequence)):
             kTails.stateFA.append(x)
-            print str(x) + '[label='+sequence[x]+']'
+            #print str(x) + '[label='+sequence[x]+']'
             self.manualProcessingLog.append(str(x) + '['+sequence[x]+']')
             
         mergedlistFA=list(kTails.stateFA) 
@@ -107,23 +107,7 @@ class kTails(object):
                     kTails.nodelistFA.append(set([i,ind+1+i+1]))
                     if i in mergedlistFA: 
                         mergedlistFA[ind+i+1]=i
-                            #print 'StateFAXXX '+ str(kTails.stateFA.index(i))+str(sequence[i:1+i]) + '<-->' + 'State '+ str(kTails.stateFA[ind+i+1]) + \
-                            #    str(sequence[ind+1+i:ind+1+1+i]) + \
-                            #    "-->equivalent strings identified for states: (" #+ \
-                                #str(i) +"," + str(ind+i) +") when k=" + str(1) 
-                                               
-                            #kTails.strEquivFA.append('State '+ str(kTails.stateFA.index(i))+str(sequence[i:+i]) + '<-->' + 'State '+ str(kTails.stateFA[ind+i+1]) + \
-                            #    str(sequence[ind+1+i:ind+1+1+i]) + \
-                            #    "-->equivalent strings identified for states: (" + \
-                            #    str(i) +"," + str(ind+1+i) +") when k=" + str(1)+'\n')
-        
-        #print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'         
-        #print 'tmpDictxx ' + str(tmpDictFA)
-        #print 'Initial Statesxx ' + str(kTails.stateFA)
-        #print 'Equivalent States Identifiedxx' + str(group_States(kTails.nodelistFA))         
-        #print 'Merged Statesxx  ' + str(mergedlistFA)                   
-        #print '***********************************************************************************************************************************************************************************'
-
+                           
         
     def do_kTailEquivCheck(self,k,seq,stateAliasMapList):
 
