@@ -164,7 +164,8 @@ class kTails(object):
         print '***********************************************************************************************************************************************************************************'
         try:
             kTailG=kTailFSMGraph('FSM')
-            kTailG.generateStateTransition(kTails.mergedlist,tmpDict,stateAliasMapList,0)
+            #kTailG.generateStateTransition(kTails.mergedlist,tmpDict,stateAliasMapList,0)
+            kTailG.generateStateTransition(kTails.mergedlist,tmpDict)
         except (ValueError,AttributeError,EnvironmentError,TypeError):
             tkMessageBox("Error","An error occured while processing the ktail FSM")
             
@@ -199,7 +200,7 @@ class kTailFSMGraph(object):
         return self.getUniqueStates
 
     #def generateStateTransition(self,loadEquiState,tmpDictx,stateAliasList,status):
-    def generateStateTransition(self,loadEquiState,tmpDictx,stateAliasList,status):
+    def generateStateTransition(self,loadEquiState,tmpDictx):
         ktailx=loadEquiState
         
         if len(ktailx)==0:
@@ -269,8 +270,7 @@ class kTailFSMGraph(object):
         
         #Here we appy the state transitions to create a finite state machine
         ktail = FiniteStateMachine('K-TAIL')
-        if status==0:
-            for nx,kvx in kTailFSMGraph.stateMap.items():
+        for nx,kvx in kTailFSMGraph.stateMap.items():
                 #n=[State(s) for s in list(getUniqueStates)]
                 for c in kvx:
                     State(nx).update({kvx[c]:State(c)})
@@ -279,25 +279,7 @@ class kTailFSMGraph(object):
                 if nx==0:
                         nx=State(0, initial=True)
                         #nx.DOT_ATTRS={'shape': 'octagon','height': '0.2'}
-        elif status==1:
-            """
-            This code segment not inplemented correctly yet
-            """
-            sAliasMap={}
-            for nx,kvx in kTailFSMGraph.stateMap.items():
-                #n=[State(s) for s in list(getUniqueStates)]
-                    sAliasMap=stateAliasList.copy()
-                    for saKey,saValue in sAliasMap.items():
-                        print saValue
-                        if nx==saKey:
-                            #check for the embedded key having same state alias
-                            for c in kvx:
-                                if c==saKey:
-                                    State(saValue).update({kvx[c]:State(iter(saValue).next())})
-                                    print 'State Transition: ' +str(saValue) + '-->'+str(saKey) + '[label='+kvx[c] +']'
-                    #Define initial state    
-                            if saKey==0:
-                                nx=State(saValue, initial=True)
+        
 
         #Create a state machine
         print '------------------------------------------------------------------------------------'
