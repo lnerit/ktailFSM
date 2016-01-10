@@ -10,6 +10,7 @@ import tkFont
 import re
 from fsm import get_graph, FiniteStateMachine, State
 from sphinx.ext.graphviz import GraphvizError
+from collections import OrderedDict
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Tkinter as tk
@@ -130,12 +131,14 @@ def generateNewImage(self):
     
 def loadFSMImage():
     try:
+        
         img = PhotoImage(file="../graph/ktail.png")
         label.image = img # keep a reference!
         imgWidth1 = canvas.winfo_width()
         imgHeight1 =canvas.winfo_height()
         x = (imgWidth1)/2.0
         y = (imgHeight1)/2.0
+        canvas.delete(img) #reset canvas
         canvas.create_image(x, y, anchor=tk.CENTER,image=img,tags="bg_img")
     except TclError:
         #If image file is missing, we generate a new image file
@@ -293,7 +296,7 @@ listBox.bind('<ButtonRelease-1>',lbItemClicked)
 
 nb.add(master_bar, text="State Alias")
     
-action=ttk.Button(objFrame,text="Open Log",command=fileOpen,width=15)
+action=ttk.Button(objFrame,text="Open Log",command=fileOpen,width=12)
 action.grid(column=1,row=3)
 configRowCol(action,1)
 
@@ -303,14 +306,54 @@ configGrid(fName,0,3,1,1)
 configRowCol(fName,1)
 
 #create an Import button which will trigger import event to lo traces into the textPad
+frameMultitrace=ttk.Frame(objFrame)
+frameMultitrace.grid(column=1,row=4)
+multitraceOption=IntVar()
+def getMultiTraceOptionValue():
+    print multitraceOption.get()
+    #Here we check the number of lines (input traces)
+    multitrace={}
+    n=0
+    for text in tracePad.get('1.0',END):
+        if text=='\n':
+            n+=1
+        #print text
+    if n>0:
+        trace=''
+        tmpch=[]
+        for lineno in range(1,n+1):
+            trace= tracePad.get(str(lineno)+'.0',str(lineno)+'.end')
+            for c in trace.split(','):
+                if c=="'":
+                    pass
+                else:
+                    tmpch.append(str(c)) 
+            multitrace['t'+str(lineno)]=tmpch
+            
+            tmpch=[] #reset temporary list for next set of traces to appended for each iteration based on the line number
+    d=OrderedDict(sorted(multitrace.items(), key=lambda t: t[0]))
+    print d
+    #print multitrace
+    
+    tmpList=[]
+    for k,v in d.items():
+        globals()['x'+str(k)] = v
+        
+    #print globals()['xt1']
+    #OrderedDict(sorted(d.items(), key=lambda t: t[0]))
+    return multitraceOption.get()
 try:
-        importButton=ttk.Button(objFrame,text="Load Traces",command=importTraces,width=15)
+        chkMultitrace=Checkbutton(frameMultitrace,text="Multi-trace",variable=multitraceOption,command=getMultiTraceOptionValue)
+        chkMultitrace.grid(column=1,row=4,sticky='w')
+        importButton=ttk.Button(frameMultitrace,text="Load Traces",command=importTraces,width=10)
         #importButton.grid(column=1,row=4)
-        configGrid(importButton,1,4,1,1)
+        #configGrid(importButton,1,4,1,1)
+        importButton.grid(column=1,row=5,sticky='w')
         configRowCol(importButton,1)
 except "Empty Log":
     pass
-            
+
+    
 tracePad = ScrolledText(objFrame, width=30,height=3)
 configGrid(tracePad,0,4,1,1)
 configRowCol(tracePad,1)
@@ -464,16 +507,25 @@ def transitionSelection(tracelog,*args):
     listBoxTop.config(yscrollcommand=scrollBar.set)
                 
     def addItemsToList():
-        st=get_apha(srcState.get())
-        #if int(self.get_num(self.srcState.get()))==0:#Indicate the source state with a *
-        #    self.set_list(self.listBox,'*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
-        #    manualMappingList.append('*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
-        #else:
-        set_listTop(listBoxTop,str(get_num(srcState.get())) +'-->'+ str(destState.get()) + '[label='+st+']')
-        manualMappingList.append(str(get_num(srcState.get())) +'-->'+ str(destState.get()))
-        transitionDict[get_num(srcState.get())]=st
+        
+        if len(srcState.get())==0:
+            tkMessageBox.showerror("No Source Entry","Please select a source state first")
+            root.focus()
+            return
+        else:
             
-    def OnDouble():
+            st=get_apha(srcState.get())
+            #if int(self.get_num(self.srcState.get()))==0:#Indicate the source state with a *
+            #    self.set_list(self.listBox,'*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
+            #    manualMappingList.append('*'+str(self.get_num(self.srcState.get())) +'-->'+ str(self.destState.get()) + '['+st+']')
+            #else:
+            set_listTop(listBoxTop,str(get_num(srcState.get())) +'-->'+ str(destState.get()) + '[label='+st+']')
+            manualMappingList.append(str(get_num(srcState.get())) +'-->'+ str(destState.get()))
+            transitionDict[get_num(srcState.get())]=st
+            
+            generateFSMGraph()
+        
+    def removeMapFromList():
         try:
             if len(listBoxTop.get(0, END))==0 or listBoxTop.curselection() is None:
                 tkMessageBox.showerror("Empty List", "The mapping list is empty")
@@ -492,14 +544,20 @@ def transitionSelection(tracelog,*args):
             #when we remove an entry from the listbox, we also update the manual mapping list
             manualMappingList.remove(ch)
             listBoxTop.delete(selection) #remove the selected entry from listbox
+            generateFSMGraph()
+            transitionDict={} #reset the transition dictionary to capture updated entries from the listBox
         except (IndexError,AttributeError,ValueError):
             tkMessageBox.showerror("Error", "Please select an entry if exists or try again")
         
-    def removeMapFromList():
+    def onDouble():
         """
         function to read the listbox selection
         and put the result in an entry widget
         """
+        if listBoxTop.curselection()[0] is None:
+            tkMessageBox.showerror("No entry","Nothing to remove")
+            return
+        
         try:
             # get selected line index
             index = listBoxTop.curselection()[0]
@@ -510,33 +568,38 @@ def transitionSelection(tracelog,*args):
             pass
             
     def generateFSMGraph():
-        
-        for e in transitionDict:
-            print transitionDict[e]
-            stateMap1[int(e)]={}
-            for m in manualMappingList:
-                st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits in a mapping entry
-                if str(e)==str(st[0]) and str(e)==str(st[1]):    
-                    stateMap1[int(e)][int(st[0])]=transitionDict[e]
-                elif str(e)!=str(st[1]) and str(e)==str(st[0]):
-                    stateMap1[int(e)][int(st[1])]=transitionDict[e]
-        #callback functions    
-        drawStateTransitionGraph()
-        loadFSMImage()
-
+        if len(listBoxTop.get(0, END))==0:
+            tkMessageBox.showerror("No entry","There is no mapping entry.Please add mapping entry first")
+            return
+        try:
+            for e in transitionDict:
+                print transitionDict[e]
+                stateMap1[int(e)]={}
+                for m in manualMappingList:
+                    st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits in a mapping entry
+                    if str(e)==str(st[0]) and str(e)==str(st[1]):    
+                        stateMap1[int(e)][int(st[0])]=transitionDict[e]
+                    elif str(e)!=str(st[1]) and str(e)==str(st[0]):
+                        stateMap1[int(e)][int(st[1])]=transitionDict[e]
+            #callback functions    
+            drawStateTransitionGraph()
+            loadFSMImage()
+            
+        except (ValueError,IndexError,GraphvizError,AttributeError):
+            pass
     def closeWindowTop():
         root.destroy()
     
     #Add a button inside the tab
     btnAdd=ttk.Button(mainFrame,text="Add",width=10,command=addItemsToList)
     btnAdd.grid(column=2,row=0)                
-    btnRemove=ttk.Button(mainFrame,text="Remove",width=10,command=OnDouble)
+    btnRemove=ttk.Button(mainFrame,text="Remove",width=10,command=removeMapFromList)
     btnRemove.grid(column=2,row=1)
     
     #Add frame to hold buttons
     btnFrame=ttk.LabelFrame(root)
     btnFrame.grid(column=0,row=3,sticky="we")
-    btnCancel=ttk.Button(btnFrame,text="Cancel",width=13,command=closeWindowTop)
+    btnCancel=ttk.Button(btnFrame,text="Close",width=13,command=closeWindowTop)
     btnCancel.pack(side=RIGHT,fill=X)
     btnOk=ttk.Button(btnFrame,text="Generate FSM",width=13,command=generateFSMGraph)
     btnOk.pack(side=RIGHT, fill=X)
