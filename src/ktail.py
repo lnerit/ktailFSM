@@ -1,6 +1,6 @@
+
 '''
 Created on 15/12/2015
-
 @author: lenz l nerit
 '''
 import sys
@@ -20,8 +20,8 @@ from fsm import FiniteStateMachine, get_graph, State
 #tDict=[] #OrderedDict()
 #tMap=OrderedDict() #This is an ordered dictionary to store state transition mapping   
 tmpDict=OrderedDict()
+tmpDict2=OrderedDict()
 
-    
 def group_States(nodelist):
     sets = [set(x) for x in nodelist] 
     stable = False
@@ -49,14 +49,36 @@ def check_equivalence(p,q):
         return True
     else:
         return False
+def transitionMapping(lst):
+        current = None
+        nxt = None
+        index=0
+        mapping=[]
+        while (index+1)<len(lst):
+                current=lst[index]
+                nxt=lst[index+1]
+                mapping.append(str(current) +'-->'+ str(nxt))
+                index+=1
+        return mapping
+        #print 'Mapping:' + str(mapping)
+def get_num(x):
+    return (''.join(ele for ele in x if ele.isdigit()))
 
-class kTails(object):
+getUniqueStatesSample=set()
+alphabet=set()
+transDictSample={}
+sampleTransitionmapping={} 
+class kTails():
     '''
     This class implements the k-tails algorithm to compare equivalent states
     and merge them before a minimal fsm is produced
     '''
     #trace=['A','B','C','A','B','C','A','B','C','A','B','C']
     k=3 # set default value to 3  but overwritten with user input
+    #getUniqueStatesSample=set()
+    #alphabet=set()
+    #transDictSample={}
+    #sampleTransitionmapping={}  
     
     def __init__(self, params):
         self.log=logging.getLogger('ktail.py')
@@ -108,23 +130,80 @@ class kTails(object):
                     if i in mergedlistFA: 
                         mergedlistFA[ind+i+1]=i
                            
+    def sampleAutomata(self,seq):
+        sequence=list(seq) #A list containing sequences of traces
+        kTails.stateSample=[]
+        kTails.nodelistSample=[[]]
+        kTails.strEquivSample=[]
         
-    def do_kTailEquivCheck(self,k,seq,stateAliasMapList):
+        kTails.sampleProcessingLog=[]
+        for x in range(0,len(sequence)):
+            kTails.stateSample.append(x)
+            #print str(x) + '[label='+sequence[x]+']'
+            self.sampleProcessingLog.append(x) #+ '['+sequence[x]+']')
+            
+        mergedlistSample=list(kTails.stateSample) 
+        
+        for i in range(0,len(kTails.stateFA)):
+            #tmpDictFA[i]=sequence[i]  
+            for ind in kTails.stateFA:
+                if check_equivalence(sequence[i:1+i],sequence[ind+1+i:ind+1+1+i]):       
+                    kTails.nodelistSample.append(set([i,ind+1+i+1]))
+                    if i in mergedlistSample: 
+                        mergedlistSample[ind+i+1]=i
+                        
+    
+    
+    def do_kTailEquivCheck(self,k,seq,flag):
 
         #Note: at k == 0, all "states" should be considered equal, but an
         #event-based model cannot express this, thus the assert.
         assert(k>0)
-        sequence=list(seq) #A list containing sequences of traces
-        self.FiniteAutomata(sequence)
+        
+        getUniqueStatesFromTrace1=set()
+        sequence=[]
+        
         kTails.state=[]
         kTails.nodelist=[[]]
         kTails.mergedlist=[]
         kTails.strEquiv=[]
-        #tmpDict=[]
+        #Get final unique states from each trace
+        kTails.getUniqueStates1=set()
+        kTails.transDict1={}
+        kTails.mapping={}
+        kTails.alphabet=[]
+
+        #kTails.stateMap2={}
+        #isMultitrace=False 
+        if type(seq) is dict:
+            
+            if len(seq)>1:
+                for k1,v1 in seq.items():
+                    if k1==1:
+                        sequence=v1 #list(seq) #A list containing sequences of traces
+                    
+            elif len(seq)==1:
+                for ks,vs in seq.items():
+                    if ks==1:
+                        sequence=vs #list(seq) #A list containing sequences of traces
+            
+        elif type(seq) is list:
+            sequence=seq
+            self.FiniteAutomata(sequence)
+        
+        
+            
         for x in range(0,len(sequence)+1-k):
             kTails.state.append(x)
             
         kTails.mergedlist=list(kTails.state) 
+
+        
+        for s in kTails.mergedlist:
+            getUniqueStatesFromTrace1.add(s)
+            
+        
+                        
         for i in range(0,len(kTails.state)):
             tmpDict[i]=sequence[i]  
             for ind in kTails.state:
@@ -146,28 +225,87 @@ class kTails(object):
                                 #tMap[i]=sequence[i] #add state as key and transition as value to dictionary
                                 #tDict.append(str(i)-sequence[i])
                             #Group the equivalent states together into sets 
-                            print 'State '+ str(kTails.state.index(i))+str(sequence[i:k+i]) + '<-->' + 'State '+ str(kTails.state[ind+i+1]) + \
+                            print 'Trace 1(t1): '+ str(kTails.state.index(i))+str(sequence[i:k+i]) + '<-->' + 'State '+ str(kTails.state[ind+i+1]) + \
                                 str(sequence[ind+1+i:ind+k+1+i]) + \
                                 "-->equivalent strings identified for states: (" + \
                                 str(i) +"," + str(ind+1+i) +") when k=" + str(k) 
                                                
-                            kTails.strEquiv.append('State '+ str(kTails.state.index(i))+str(sequence[i:k+i]) + '<-->' + 'State '+ str(kTails.state[ind+i+1]) + \
+                            kTails.strEquiv.append('Trace 1(t1): '+ str(kTails.state.index(i))+str(sequence[i:k+i]) + '<-->' + 'State '+ str(kTails.state[ind+i+1]) + \
                                 str(sequence[ind+1+i:ind+k+1+i]) + \
                                 "-->equivalent strings identified for states: (" + \
-                                str(i) +"," + str(ind+1+i) +") when k=" + str(k)+'\n')
-
-        print '----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'         
-        print 'tmpDict ' + str(tmpDict)
-        print 'Initial States ' + str(kTails.state)
-        print 'Equivalent States Identified' + str(group_States(kTails.nodelist))         
-        print 'Merged States  ' + str(kTails.mergedlist)                   
+                                str(i) +"," + str(ind+1+i) +") when k=" + str(k) +'\n')
+            
+        print 'Trace 1: tmpDict ' + str(tmpDict)
+        #if isMultitrace:
+        #    print 'Trace 2: tmpDict2 ' +str(tmpDict2)
+        print 'Trace 1:Initial States ' + str(kTails.state)
+        #if isMultitrace:
+        #    print 'Trace 2:Initial States ' + str(kTails.state2)
+        print 'Trace 1:Equivalent States Identified' + str(group_States(kTails.nodelist)) 
+        #if isMultitrace:
+        #     print 'Trace 2:Equivalent States Identified' + str(group_States(kTails.nodelist2))           
+        print 'Trace 1:Merged States  ' + str(kTails.mergedlist)
+        #if isMultitrace:
+        #    print 'Trace 2:Merged States  ' + str(kTails.mergedlist2)    
         print '***********************************************************************************************************************************************************************************'
-        try:
-            kTailG=kTailFSMGraph('FSM')
+
+        print 'old values'
+        print 'unique states: ' + str(getUniqueStatesSample)
+        print 'Aplhabet: ' + str(alphabet)
+        print 'Transition Map: ' + str(sampleTransitionmapping)
+        if flag==0:
+            getUniqueStatesSample.clear()
+            alphabet.clear()
+            #transDictSample={}
+            sampleTransitionmapping.clear()  
+            for val1 in kTails.mergedlist:
+                getUniqueStatesSample.add(int(val1))
+            print 'Unique States in Sample Trace: ' + str(getUniqueStatesSample)
+        
+            for g in getUniqueStatesSample:
+                for tmpk,tmpv in tmpDict.items():
+                    if g==tmpk:
+                        alphabet.add(tmpv)
+            print 'Alphabet in Sample Trace:' + str(alphabet)
+            
+                            
+            current = None
+            nxt = None
+            index=0
+ 
+            while (index+1)<len(kTails.mergedlist):
+                current=kTails.mergedlist[index]
+                nxt=kTails.mergedlist[index+1]
+                for k,v in tmpDict.items():
+                    if current==k:
+                        sampleTransitionmapping[(current,v)]=nxt#.append(str(current) +'-->'+ str(nxt))
+                index+=1        
+                                
+            print 'Sample Transition Mapping:' + str(sampleTransitionmapping)
+              
+        else:
+            for val1 in kTails.mergedlist:
+                kTails.getUniqueStates1.add(int(val1))
+            print 'Unique States in Trace: ' + str(kTails.getUniqueStates1)
+        
+            for g in kTails.getUniqueStates1:
+                for tmpk,tmpv in tmpDict.items():
+                    if g==tmpk:
+                        kTails.alphabet.append(tmpv)
+                        kTails.transDict1[g]=tmpv
+            print 'Alphabet in Trace:1' + str(kTails.transDict1)  
+            
+        kTails.mapping=transitionMapping(kTails.mergedlist)
+        
+        
+        print '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+        
+        
+        kTailG=kTailFSMGraph('FSM')
             #kTailG.generateStateTransition(kTails.mergedlist,tmpDict,stateAliasMapList,0)
-            kTailG.generateStateTransition(kTails.mergedlist,tmpDict)
-        except (ValueError,AttributeError,EnvironmentError,TypeError):
-            tkMessageBox("Error","An error occured while processing the ktail FSM")
+        kTailG.generateStateTransition(kTails.mergedlist,tmpDict)
+        #except (ValueError,AttributeError,EnvironmentError,TypeError):
+         #   tkMessageBox("Error","An error occured while processing the ktail FSM")
             
     if __name__ == "__main__":
         pass
@@ -256,17 +394,16 @@ class kTailFSMGraph(object):
                             #to the next node is the same as the self-transition on current node
                             #If so then we assign and arbitrary label-as it might cause non-deterministic fsm
                         elif str(z)!=str(st[1]) and str(z)==str(st[0]):
-                            #print stateMap[z][int(st[1])]
                             kTailFSMGraph.stateMap[z][int(st[1])]=f
-                        #elif str(z)==str(st[1]) and str(z)!=str(st[0]): 
-                        #    stateMap[z][int(st[0])]=f
+                            
         print 'statemap'+str(kTailFSMGraph.stateMap)
+        tDict=dict()
         
-        for key,value in kTailFSMGraph.stateMap.items():
-            if value==' ':
-                pass
-            else:
-                print key,value
+        #for nx,kvx in kTailFSMGraph.stateMap.items():
+                #n=[State(s) for s in list(getUniqueStates)]
+        #        for c in kvx:
+        #            tDict[(nx,kvx[c])]=str(c)
+        #print tDict
         
         #Here we appy the state transitions to create a finite state machine
         ktail = FiniteStateMachine('K-TAIL')
@@ -277,18 +414,20 @@ class kTailFSMGraph(object):
                     print 'State Transition: ' +str(nx) + '-->'+str(c) + '[label='+kvx[c] +']'
                 #Define initial state    
                 if nx==0:
-                        nx=State(0, initial=True)
+                    nx=State(0, initial=True)
                         #nx.DOT_ATTRS={'shape': 'octagon','height': '0.2'}
+                    #nx=State(1, accepting=True)
         
 
         #Create a state machine
         print '------------------------------------------------------------------------------------'
         #Check if there is existing graph data 
-        try:
+        try:                
             graph=get_graph(ktail)
             if graph!=None:
+                #graph.node_attr.update({'fontname':'Arial', 'fontcolor':'blue', 'fontsize':'11'})
                 graph.draw('../graph/ktail.png', prog='dot')
-                print graph
+                #print graph
             else:
                 pass
         except GraphvizError:
