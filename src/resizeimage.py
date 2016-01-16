@@ -2,7 +2,7 @@
 # works with Python27 and Python32
 from PIL import Image
 import os
-import tkMessageBox
+
 
 def resizeImage(filename,factor):
     image_file =filename#"../graph/sample.png"
@@ -23,19 +23,3 @@ def resizeImage(filename,factor):
     new_image_file = "%s%s%s" % (name, str(factor), ext)
     #new_image_file = "%s%s" % (name, ext)
     img_anti.save(new_image_file)
-    #print("resized file saved as %s" % new_image_file)
-    
-def generateNewImage():
-        from PIL import Image
-        my_list=[]
-        img = Image.new('RGB', (255, 255))
-        img.putdata(my_list)
-        try:
-            img.save('../graph/ktail.png')
-        except IOError:
-            tkMessageBox.showerror("File Error", "Error occured while saving image file")
-    # one way to show the image is to activate
-    # the default viewer associated with the image type
-#resizeImage()
-#import webbrowser
-#webbrowser.open(new_image_file)
