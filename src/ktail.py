@@ -402,10 +402,7 @@ class kTailFSMGraph(object):
                             kTailFSMGraph.stateMap[z][int(st[1])]=f
                             
         print 'statemap'+str(kTailFSMGraph.stateMap)
-        #for k,v in kTailFSMGraph.stateMap.items():
-        #    if v is not None:
-        #        kTails.alphabet[()]
-        #print 'Alphabet in Tracex:' + str(alphabet) 
+       
         #Here we appy the state transitions to create a finite state machine
         ktail = FiniteStateMachine('K-TAIL')
         kTailFSMGraph.alphabetfromtrace.clear()
