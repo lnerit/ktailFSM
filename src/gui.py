@@ -2,7 +2,7 @@
 import sys
 import os.path
 from Tkconstants import END, WORD, FALSE, HORIZONTAL, BOTTOM, X, VERTICAL,\
-    RIGHT, Y, BOTH, LEFT, W,SINGLE
+    RIGHT, Y, BOTH, LEFT,SINGLE
 from ktail import kTailFSMGraph
 import logging
 from gtk import TRUE
@@ -40,6 +40,9 @@ loadEquivalentState=[]
 stateAliasMapList={}
 multitrace={}
 sampleStatus=''
+#Check button to validate trace against the sample trace input automata
+sInputCheck=IntVar()
+
 def __init__(self,param):
     self.log=logging.getLogger('gui.py')
     
@@ -90,27 +93,25 @@ def generateAutomata():
     if len(tracePad.get('1.0',END))==0 or len(tracePad.get('1.0',END))==1:
         tkMessageBox.showinfo("Empty trace","The trace is empty.Please select a trace log.")
         return
-    try:
-        text_FromTextBox(tracePad.get('1.0', END).split(','))
-        statsPad.configure(state='normal')
+    #try:
+    text_FromTextBox(tracePad.get('1.0', END).split(','))
+    statsPad.configure(state='normal')
         #loadEquivalentState=loadStatsLogToTextBox(int(box.get()),columns)
-        if int(multitraceOption.get())==1:
-            getMultiTraceOptionValue()
-            loadEquivalentState=loadStatsLogToTextBox(int(box.get()),multitrace,1)
-        else:
-             loadEquivalentState=loadStatsLogToTextBox(int(box.get()),columns,1)
+        #if int(multitraceOption.get())==1:
+            #getMultiTraceOptionValue()
+        #    loadEquivalentState=loadStatsLogToTextBox(int(box.get()),multitrace,1)
+        #else:
+    loadEquivalentState=loadStatsLogToTextBox(int(box.get()),columns,1)
 
-        loadFSMImage()
+    loadFSMImage()
 
-        print("--- %s seconds ---" % (time.time() - start_time))
+    print("--- %s seconds ---" % (time.time() - start_time))
         
             
-    except "Error":
-        tkMessageBox.showerror("Error", "An error has occured!")
-        pass
+    #except "Error":
+    #    tkMessageBox.showerror("Error", "An error has occured!")
+        #pass
 
-
-    
 def kValueSelectormethod (self):
         print("method is called")
         
@@ -204,11 +205,26 @@ statsTextDisplayFrame=ttk.LabelFrame(statsFrame,text='DisplayLog...',width=50,he
 configGrid(statsTextDisplayFrame,0,2,1,1)
 configRowCol(statsTextDisplayFrame,1)
 
+def displaysampleAutomata():
+    global samplaCanvas
+    if sInputCheck.get()==1:
+        import resizeimage
 
-
-
-    
-
+        samplaCanvas=Canvas(statsFrame,bg='#FFFFFF',height=200,width=300)
+        #samplaCanvas.grid(column=1,row=2)
+        configGrid(samplaCanvas,1,2,1,1)
+        configRowCol(samplaCanvas,1)
+        filename='../graph/sample.png'
+        resizeimage.resizeImage(filename,0.5)
+        img = PhotoImage(file="../graph/sample0.5.png")
+       
+        label1.image = img # keep a reference!
+        
+        samplaCanvas.delete(img) #reset canvas
+        samplaCanvas.create_image(0, 80, anchor='nw',image=img,tags="bg_img")
+    else:
+        samplaCanvas.destroy()
+        
 #btnClosex=ttk.Button(sampleFrame,text="Close window",command=closeWindow,width=15)
 #btnClosex.pack(side=tk.BOTTOM,anchor=tk.N,fill=BOTH)
 
@@ -245,13 +261,14 @@ def combine_funcs(*funcs):
         for f in funcs:
             f(*args,**kwargs)
     return combine_func
+
 validateAgainstsample=IntVar()
 def get_sInputCheck():
     print validateAgainstsample.get()
     return validateAgainstsample.get()
 
 #Add a button inside the tab
-btnGenerate=ttk.Button(frmInsideTab1,text="Generate Automata",width=15,command=combine_funcs(generateAutomata))
+btnGenerate=ttk.Button(frmInsideTab1,text="Generate Automata",width=15,command=generateAutomata)
 btnGenerate.pack(side=tk.TOP)
 sampleAutomataChk=Checkbutton(frmInsideTab1,text="Validate against sample",variable=validateAgainstsample,command=get_sInputCheck)
 sampleAutomataChk.pack(side=tk.TOP)
@@ -316,14 +333,12 @@ listBoxTop.pack(fill=BOTH)
 scrollBar.config(command=listBoxTop.yview)
 listBoxTop.config(yscrollcommand=scrollBar.set)
 
-#Check button to validate trace against the sample trace input automata
-sInputCheck=IntVar()
 
 
-sampleInputOption=Checkbutton(listFrame,text='',variable=sInputCheck)
+
+sampleInputOption=Checkbutton(listFrame,text='Display Automata',variable=sInputCheck,command=displaysampleAutomata)
 sampleInputOption.pack(side=tk.LEFT, fill='x',anchor='w')
-
-
+#sampleInputOption.bind('<>',displaysampleAutomata)
 
 nb.add(master_bar, text="Sample Input")
 
@@ -333,45 +348,47 @@ def generateSampleAutomata():
     if len(samplePad.get())==0 or len(samplePad.get())==1:
         tkMessageBox.showinfo("Empty trace","Sample trace is empty.Please select a trace log.")
         return
-    try:
-        text_FromTextBox(samplePad.get().split(','))
-        statsPad.configure(state='normal')
+    #try:
+    text_FromTextBox(samplePad.get().split(','))
+    statsPad.configure(state='normal')
         
         #loadEquivalentState=loadStatsLogToTextBox(int(box.get()),columns,0)
         
-        from ktail import kTails
-        import ktail
-        kt=kTails('K-TAILS')
+    from ktail import kTails
+    import ktail
+    kt=kTails('K-TAILS')
         #ktail.getUniqueStatesSample=dict()
         #ktail.alphabet={}
         #ktail.sampleTransitionmapping={}
-        kt.do_kTailEquivCheck(int(box.get()),columns,0)
+    kt.do_kTailEquivCheck(int(box.get()),columns,0)
     
-        srcState.delete(0,END)
-        srcState['values'] = ([k for k in ktail.getUniqueStatesSample])
-        if len( srcState['values'])>0:
-            srcState.current(0)
-        else:
-            pass
+    srcState.delete(0,END)
+    srcState['values'] = ([k for k in ktail.getUniqueStatesSample])
+    if len( srcState['values'])>0:
+        srcState.current(0)
+    else:
+        pass
         #else:
         #    tkMessageBox.showerror("No Intial state",'No initial state selected')
         
-        destState.delete(0,END)
-        destState['values'] = ([k for k in ktail.getUniqueStatesSample])
-        if len( destState['values'])>0:
-            destState.current(-1)
-        else:
-            pass
-        #else:
-        #    tkMessageBox.showerror("Accepting state",'No accepting states selected')
-        
-        loadFSMImage()
-
-        print("--- %s seconds ---" % (time.time() - start_time))
-        
-    except (IndexError,TclError):
-        tkMessageBox.showerror("Error", "An error has occured!")
+    destState.delete(0,END)
+    destState['values'] = ([k for k in ktail.getUniqueStatesSample])
+    if len( destState['values'])>0:
+        print 
+        destState.current(destState['values'][-1])
+    else:
         pass
+    sampleTransition=ktail.sampleTransitionmapping
+    listBoxTop.delete(0,END)
+    for k,v in sampleTransition.items():
+        p,q=k
+        listBoxTop.insert(END,str(p)+'-->'+str(v)+'[label='+q+']')
+        
+    print("--- %s seconds ---" % (time.time() - start_time))
+        
+    #except (IndexError,TclError):
+    #    tkMessageBox.showerror("Error", "An error has occured!")
+    #    pass
 
 
     
@@ -393,6 +410,18 @@ samplePad = ttk.Entry(tracePadFrame, width=20)
 #samplePad.grid(column=0,row=0,sticky='ewns')
 configGrid(samplePad,0,0,1,1)
 #configRowCol(samplePad,1)
+
+try:
+        #chkMultitrace=Checkbutton(frameMultitrace,text="Multi-trace",variable=multitraceOption)
+        #chkMultitrace.grid(column=1,row=4,sticky='w')
+        importButton=ttk.Button(frameMultitrace,text="Load Traces",command=importTraces,width=10)
+        #importButton.grid(column=1,row=4)
+        #configGrid(importButton,1,4,1,1)
+        importButton.grid(column=1,row=5,sticky='w')
+        configRowCol(importButton,1)
+except "Empty Log":
+    pass
+
 sampleInputGenerateButton = ttk.Button(tracePadFrame,text='Process Sample',width=15,command=generateSampleAutomata)
 configGrid(sampleInputGenerateButton,1,0,1,1)
 #sampleInputGenerateButton.pack(side=RIGHT,anchor='s')
@@ -402,43 +431,7 @@ tracePad = ScrolledText(tracePadFrame, width=10,height=3)
 configGrid(tracePad,0,1,1,1)
 configRowCol(tracePad,1)
 
-def getMultiTraceOptionValue():
-    print multitraceOption.get()
-    #Here we check the number of lines (input traces)
-    mtrace={}
-    n=0
-    for text in tracePad.get('1.0',END):
-        if text=='\n':
-            n+=1
-    if n>0:
-        trace=''
-        tmpch=[]
-        for lineno in range(1,n+1):
-            trace= tracePad.get(str(lineno)+'.0',str(lineno)+'.end')
-            for c in trace.split(','):
-                if c=="'":
-                    pass
-                else:
-                    tmpch.append(str(c)) 
-            mtrace[lineno]=tmpch
-            
-            tmpch=[] #reset temporary list for next set of traces to appended for each iteration based on the line number
-    d=OrderedDict(sorted(mtrace.items(), key=lambda t: t[0]))
-    for k,v in d.items():
-        multitrace[k]=v
 
-    
-    return multitraceOption.get()
-try:
-        chkMultitrace=Checkbutton(frameMultitrace,text="Multi-trace",variable=multitraceOption)
-        chkMultitrace.grid(column=1,row=4,sticky='w')
-        importButton=ttk.Button(frameMultitrace,text="Load Traces",command=importTraces,width=10)
-        #importButton.grid(column=1,row=4)
-        #configGrid(importButton,1,4,1,1)
-        importButton.grid(column=1,row=5,sticky='w')
-        configRowCol(importButton,1)
-except "Empty Log":
-    pass
 
 # create a pulldown menu, and add it to the menu bar
 menubar = Menu(win)
@@ -452,7 +445,7 @@ menubar.add_cascade(label="File", menu=filemenu)
 
 configRowCol(btnGenerate,1)
 label = Label(win) #create a label keep a reference to FSM image called from loadFSMImage function
-
+label1 = Label(win) #create a label to keep  a reference to sample FSM image
 #Add a text area to display log information
   
 statsPad=ScrolledText(statsTextDisplayFrame,width=150,height=15,wrap=WORD)
@@ -547,42 +540,66 @@ def loadStatsLogToTextBox(k,lst,flag):
                     statsPad.insert(END,str(nx) + '-->'+str(c) + '[label='+kvx[c] +']\n')
     
         statsPad.insert(END,'***********************************************************************************************************************************\n')
-        statsPad.configure(state='disabled')
-        print validateAgainstsample.get()
+        
         if validateAgainstsample.get()==1:
-            
+            statsPad.insert(END,'Processing Automata for Sample Input\n')
             from dfa import DFA
-            print 'xxx' + str(srcStateTextVariable.get())
+           
             if srcStateTextVariable is not None:
                 DFA.start_state=int(srcStateTextVariable.get())
+                
+                print 'Initial State: ' + str(srcStateTextVariable.get())
+                statsPad.insert(END,'Initial State: '+ str(srcStateTextVariable.get())+'\n')
             else:
                 tkMessageBox.showerror("Initial State","Not Intial state defined. Please check the stting panel")
                 #return
-            print 'yyyy' + str(destState['value'][-1])
+           
             if destStateTextVariable.get() is not None:
                 DFA.accept_states={int(destStateTextVariable.get())}
+                print 'Accepting State: ' + str(destStateTextVariable.get())
+                statsPad.insert(END,'Accepting State: ' + str(destStateTextVariable.get())+'\n')
             else:
                 tkMessageBox.showerror("Accepting state","No accepting states defined. Please check the stting panel")
                 #return
             getUniqueStatesSample=ktail.getUniqueStatesSample
-            alphabet=ktail.alphabet
+            print 'Sample States: ' + str(getUniqueStatesSample)
+            statsPad.insert(END,'Sample States: ' + str(getUniqueStatesSample)+'\n')
             sampleTransitionmapping=ktail.sampleTransitionmapping
-        
+            #listBoxTop.delete(0,END)
+            #for st in sampleTransitionmapping.items():
+            #    listBoxTop.insert(END,st)
+            print 'Sample Transitions: ' + str(sampleTransitionmapping)
+            statsPad.insert(END,'Sample Transitions: ' + str(sampleTransitionmapping)+'\n')
+            
+            alphabet=ktail.alphabet
+            print 'Alphabet from sample: ' + str( alphabet)
+            statsPad.insert(END,'Alphabet from sample: ' + str( alphabet)+'\n')
             d = DFA(getUniqueStatesSample, alphabet,sampleTransitionmapping,DFA.start_state,DFA.accept_states);
-            inp_program = kt.alphabet#tracePad.get('1.0',END);
+            alphabetfromtrace=kTailFSMGraph.alphabetfromtrace
+            #inp_program = alphabet#tracePad.get('1.0',END);
+            testalphabet=[]
+            for k,v in alphabetfromtrace.items():
+                p,q=k
+                testalphabet.append(q)
+            print 'Input Alphabet from Trace ' + str(testalphabet)
+            statsPad.insert(END,'Input Alphabet from Trace ' + str(testalphabet)+'\n')
             #print inp_program
             #print d.run_with_input_list(inp_program);
-            if d.run_with_input_list(inp_program):
+            sampleStatus=''
+            if d.run_with_input_list(testalphabet):
                 sampleStatus='ACCEPT'
                 acceptrejectStatusvalue['text']=sampleStatus
                 acceptrejectStatusvalue['bg']='green'
-                print sampleStatus
+                print 'Status:'+sampleStatus
             else:
                 sampleStatus='REJECT'
                 acceptrejectStatusvalue['text']=sampleStatus
                 acceptrejectStatusvalue['bg']='red'
-                print sampleStatus
-    except "Error":
+                print 'Status:'+sampleStatus
+            statsPad.insert(END,'Status: ' + sampleStatus+'\n')
+        statsPad.insert(END,'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
+        statsPad.configure(state='disabled')
+    except (ValueError):
         tkMessageBox.ERROR
 
 
