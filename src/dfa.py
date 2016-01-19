@@ -63,29 +63,6 @@ class DFA():
         
         return self.in_accept_state();
     
-   
     pass;
-'''
-start_state=0
-accept_state={5}
-alphabet={'a','b','c','d','e'}
-states={0,1,2,3,4,5}
-tf=dict()
-tf[(0,'a')]=1
-tf[(1,'b')]=2
-tf[(2,'c')]=3
-tf[(3,'d')]=4
-tf[(4,'e')]=5
 
-d=DFA(states,alphabet,tf,start_state,accept_state)
-inputstring=list('abcxde')
-#if d.run_with_input_list(inputstring) is None:
-#    print 'No Transition Defined'
-#else:
-print 'Sample Alphabet(traces) : '+str(alphabet)
-print 'Input Alphabet (traces) : '+str(inputstring)
-print '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-print str(d.run_with_input_list(inputstring))
-print 'xxxxxxxxxxxxxxxxxxxxxxxxxx'
-'''
 
