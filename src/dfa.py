@@ -2,11 +2,7 @@
 
 
 class DFA():
-    #start_state = 0;
-    #accept_states = {};
-    #current_state = None;
     loginformation=[]
-    
     def __init__(self, states, alphabet, transition_function, start_state, accept_states,flag):
         self.states = states;
         self.alphabet = alphabet;
@@ -49,8 +45,6 @@ class DFA():
         return;
     
     def run_with_input_list(self, input_list):
-        loginformation=[]
-        print 'xxxxx' +str(loginformation)
         self.go_to_initial_state();
         for inp in input_list:
             self.transition_to_state_with_input(inp);
