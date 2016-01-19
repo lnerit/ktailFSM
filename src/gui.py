@@ -6,11 +6,9 @@ from Tkconstants import END, WORD, FALSE, HORIZONTAL, BOTTOM, X, VERTICAL,\
 from ktail import kTailFSMGraph
 import logging
 from gtk import TRUE
-import tkFont
 import re
 from fsm import get_graph, FiniteStateMachine, State
 from sphinx.ext.graphviz import GraphvizError
-from ttk import Labelframe
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Tkinter as tk
@@ -60,16 +58,20 @@ def fileOpen():
 def importTraces():
         #Import Traces from file and display on textPad
         try:
-            contents=[]
+            #contents=[]
             tracePad.delete('1.0', END) #clear the textbox before loading traces
-            with open(fName.get(), 'r') as my_file:
-                for line in my_file:
+            print file(fName.get(), "r").read().replace("\n", ", ")
+            #with open(fName.get(), 'r') as my_file:
+            #    txt=''
+            #    for line in my_file:
                     #contents.append(line.rstrip().split(','))
-                    line=line.strip()
-                    contents.append(line)
-                
-            for row in contents:
-                tracePad.insert(0.0, row)   
+            #        line=line.strip().replace('\n',',')
+            #        contents.append(line)
+                    #print str(line+'\n').replace('\n', ',')
+            
+            row=file(fName.get(), "r").read().replace("\n", ", ")
+            tracePad.insert(0.0, row)
+            #tracePad.insert(0,0, )   
         except IOError:
             if len(fName.get())==0 or len(fName.get())==1:
                 tkMessageBox.showinfo("File Error","No trace log file specified.Please selected a log file")
@@ -95,7 +97,7 @@ def generateAutomata():
     text_FromTextBox(tracePad.get('1.0', END).split(','))
     statsPad.configure(state='normal')
     
-    loadEquivalentState=loadStatsLogToTextBox(int(box.get()),columns,1)
+    loadStatsLogToTextBox(int(box.get()),columns,1)
 
     loadFSMImage()
 
@@ -128,12 +130,6 @@ def loadFSMImage():
         tkMessageBox.ERROR
         return
     
-def loadStateAliasToListBox(lst,Listbox):
-    Listbox.delete(0, END)
-    for item in lst:
-        Listbox.insert(END, item)
-        #We initialise the dictionary with the with alias with the original states
-        stateAliasMapList[item]={item}
 
 def closeWindow():
     win.destroy()
@@ -147,8 +143,8 @@ def configGrid(objectx,col,row,colspan,rowspan):
     objectx.grid(column=col,row=row,rowspan=rowspan, columnspan=colspan, sticky=(tk.N, tk.S, tk.W, tk.E))
     return objectx
 
-def resize(self, event):
-    self.font = tkFont(size = stateDiagramFrame.winfo_height())
+#def resize(self, event):
+#    self.font = tkFont(size = stateDiagramFrame.winfo_height())
 
 def setScrollBar(canvas,frame):
     hbar=Scrollbar(frame,orient=HORIZONTAL)
@@ -160,7 +156,6 @@ def setScrollBar(canvas,frame):
     canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
     canvas.pack(side=LEFT,expand=True,fill=BOTH)
     
-
 #Add canvas frame for canvas area to draw image
 
 stateDiagramFramePreview=ttk.Frame(win)
@@ -240,7 +235,7 @@ kvalue_label=Label(frmInsideTab1,text="Select value for K",width=15).pack(side=t
 box_value = StringVar()
 box = ttk.Combobox(frmInsideTab1, textvariable=box_value, 
                                     state='readonly',text='k-tail',width=15,justify=RIGHT)
-box.bind("<<ComboboxSelected>>", kValueSelectormethod)
+#box.bind("<<ComboboxSelected>>", kValueSelectormethod)
 box['values'] = ('1', '2', '3','4','5')
 box.current(1)
 box.pack(side=tk.TOP)
@@ -264,17 +259,28 @@ sampleAutomataChk=Checkbutton(frmInsideTab1,text="Validate against sample",varia
 sampleAutomataChk.pack(side=tk.TOP)
 
 
-acceptrejectStatuslbl=Label(frmInsideTab1,text="Status:")
-acceptrejectStatuslbl.pack(side=LEFT,anchor='w')
 
-acceptrejectStatusvalue=Label(frmInsideTab1,text=sampleStatus,width=10)
-acceptrejectStatusvalue.pack(side=LEFT,anchor='w',fill=BOTH)
+acceptrejectStatusvalue=Label(frmInsideTab1,text=sampleStatus,width=10,bg='blue')
+acceptrejectStatusvalue.pack(anchor='w',side=tk.TOP,fill=X)
+#acceptrejectStatuslbl=Label(frmInsideTab1,text="Status:",width=4)
+#acceptrejectStatuslbl.pack(anchor='w',side=tk.TOP)
+def displayFromBrowser():
+    if len(canvas.find_all())==0:
+        tkMessageBox.showinfo("FSM", 'Nothing to show.Please generate an FSM first')
+        return
+    
+    import webbrowser
+    webbrowser.open('../graph/ktail.png') 
+
+externalDisplay=ttk.Button(frmInsideTab1,text="Print",command=closeWindow,width=3)
+externalDisplay.pack(anchor='w',fill=X)
+externalDisplay1=ttk.Button(frmInsideTab1,text="Browser View",command=displayFromBrowser,width=3)
+externalDisplay1.pack(anchor='w',fill=X)
+
 try:
-    #closeButtonFrame=Labelframe(frmInsideTab1)
-    #closeButtonFrame.pack(side=BOTTOM,anchor=tk.S,fill=BOTH)
     photo1 = tk.PhotoImage(file="../icon/dialog_cancel.png")
-    btnClose=ttk.Button(frmInsideTab1,text="Close window",image=photo1,command=closeWindow,width=15)
-    btnClose.pack(side=BOTTOM)
+    btnClose=ttk.Button(frmInsideTab1,text="Close window",image=photo1,command=closeWindow,width=10)
+    btnClose.pack(side=BOTTOM,anchor='w',fill=X)
     #configRowCol(btnClose,1)
 except TclError:
     tkMessageBox.showerror("Icon Error", "Unable to load icon")
@@ -290,7 +296,6 @@ innersampleFrame.grid(column=0,row=0,sticky='ewns',)
 #configGrid(innersampleFrame,0,0,1,1)
 configRowCol(innersampleFrame,1)
 
-
 labelSource=ttk.Label(innersampleFrame,text="Start Start", justify=LEFT)
 labelSource.grid(column=0, row=0, sticky="nw")
 #labelSource.pack(side=tk.TOP,anchor='w')   
@@ -301,26 +306,31 @@ srcState.delete(0, END)
 srcState.grid(column=1, row=0, sticky="ne")
 #srcState.pack(side=tk.TOP, anchor='e')#(column=1, row=0, sticky="e")          
 srcState.state(['readonly'])
-srcState.bind("<<ComboboxSelected>>", kValueSelectormethod)
-
+#srcState.bind("<<ComboboxSelected>>", kValueSelectormethod)
 
     # Destination label
 labelDestination=ttk.Label(innersampleFrame,text="Accept States",justify=LEFT)
 #labelDestination.pack(side=LEFT,anchor='w')
 labelDestination.grid(column=0, row=1, sticky="nw")
 
-
-       
-
-       
+def acceptStatesSelected(event):
+    if len(acceptStatestEntry.get())==0:
+        acceptStatestEntry.insert(END,str(destStateTextVariable.get()))
+    else:
+        acceptStatestEntry.insert(END,','+ str(destStateTextVariable.get()))
     # destination combobox
 destStateTextVariable=StringVar()
-destState = ttk.Combobox(innersampleFrame,width=10,textvariable=destStateTextVariable)
+destState = ttk.Combobox(innersampleFrame,width=4,textvariable=destStateTextVariable)
 destState.delete(0, END)
-destState.grid(column=1 , row=1, sticky="ne")
+destState.grid(column=1 , row=1, sticky="nw")
 #destState.pack(tk.TOP)
 destState.state(['readonly'])
-destState.bind("<<ComboboxSelected>>", kValueSelectormethod)
+destState.bind("<<ComboboxSelected>>", acceptStatesSelected)
+
+
+acceptStatesTextVariable=StringVar()
+acceptStatestEntry = ttk.Entry(innersampleFrame,width=4,textvariable=acceptStatesTextVariable)
+acceptStatestEntry.grid(column=1 , row=1, sticky="e")
 
 listFrame=ttk.LabelFrame(sampleFrame)
 listFrame.grid(column=0,row=1,sticky="ewns")
@@ -360,14 +370,18 @@ def generateSampleAutomata():
         else:
             pass
             
-            
+        acceptStatestEntry.delete(0,END)
         destState.delete(0,END)
         destState['values'] = ([k for k in ktail.getUniqueStatesSample])
         if len( destState['values'])>0:
             print destState['values'][-1]
             destState.current(destState['values'][-1])
+            acceptStatestEntry.insert(END,str(destStateTextVariable.get()))
+            #acceptStatestEntry.insert(END, destState.current(destState['values'][-1]))
+            
         else:
             pass
+        
         sampleTransition=ktail.sampleTransitionmapping
         listBoxTop.delete(0,END)
         for k,v in sampleTransition.items():
@@ -378,6 +392,7 @@ def generateSampleAutomata():
         
     except (TypeError,TclError,ValueError):
         pass
+    
 fName=ttk.Entry(filenamePadFrame,width=30,textvariable=fileName)
 fName.grid(column=0,row=2,sticky='ewns')
 configRowCol(fName,1)
@@ -509,22 +524,25 @@ def loadStatsLogToTextBox(k,lst,flag):
         if validateAgainstsample.get()==1:
             statsPad.insert(END,'Processing Automata for Sample Input\n')
             from dfa import DFA
-           
             if srcStateTextVariable is not None:
-                DFA.start_state=int(srcStateTextVariable.get())
-                
+                #DFA.start_state=int(srcStateTextVariable.get())
+                start_state=int(srcStateTextVariable.get())
                 print 'Initial State: ' + str(srcStateTextVariable.get())
                 statsPad.insert(END,'Initial State: '+ str(srcStateTextVariable.get())+'\n')
             else:
                 tkMessageBox.showerror("Initial State","Not Intial state defined. Please check the stting panel")
                 #return
-           
-            if destStateTextVariable.get() is not None:
-                DFA.accept_states={int(destStateTextVariable.get())}
-                print 'Accepting State: ' + str(destStateTextVariable.get())
-                statsPad.insert(END,'Accepting State: ' + str(destStateTextVariable.get())+'\n')
+            accept_states=set()
+            if len(acceptStatestEntry.get())>0:
+                #DFA.accept_states={int(destStateTextVariable.get())}
+                
+                for item in str(acceptStatestEntry.get()).split(','):
+                    accept_states.add(int(item))
+                #accept_states={acceptStatestEntry.get()}
+                print 'Accepting States: ' + str(acceptStatestEntry.get())
+                statsPad.insert(END,'Accepting State: ' + str(acceptStatestEntry.get())+'\n')
             else:
-                tkMessageBox.showerror("Accepting state","No accepting states defined. Please check the stting panel")
+                tkMessageBox.showerror("Accepting state","No accepting states defined. Please check the setting panel")
                 
             getUniqueStatesSample=ktail.getUniqueStatesSample
             print 'Sample States: ' + str(getUniqueStatesSample)
@@ -532,14 +550,17 @@ def loadStatsLogToTextBox(k,lst,flag):
             sampleTransitionmapping=ktail.sampleTransitionmapping
             
             print 'Sample Transitions: ' + str(sampleTransitionmapping)
-            statsPad.insert(END,'Sample Transitions: ' + str(sampleTransitionmapping)+'\n')
+            statsPad.insert(END,'Sample Transitions:\n')
+            for k,v  in sampleTransitionmapping.items():
+                p,q=k
+                statsPad.insert(END,str(p)+'--->'+str(v)+'[label='+q+']\n')
             
             alphabet=ktail.alphabet
             print 'Alphabet from sample: ' + str( alphabet)
             statsPad.insert(END,'Alphabet from sample: ' + str( alphabet)+'\n')
-            d = DFA(getUniqueStatesSample, alphabet,sampleTransitionmapping,DFA.start_state,DFA.accept_states);
+            d=DFA(getUniqueStatesSample, alphabet,sampleTransitionmapping,start_state,accept_states,1);
             alphabetfromtrace=kTailFSMGraph.alphabetfromtrace
-       
+            print 'yyyyyyy ' + str(sampleTransitionmapping)
             testalphabet=[]
             for k,v in alphabetfromtrace.items():
                 p,q=k
@@ -549,7 +570,7 @@ def loadStatsLogToTextBox(k,lst,flag):
             
             sampleStatus=''
             if d.run_with_input_list(testalphabet):
-                sampleStatus='ACCEPT'
+                sampleStatus=' ACCEPT'
                 acceptrejectStatusvalue['text']=sampleStatus
                 acceptrejectStatusvalue['bg']='green'
                 print 'Status:'+sampleStatus
@@ -557,9 +578,18 @@ def loadStatsLogToTextBox(k,lst,flag):
                 sampleStatus='REJECT'
                 acceptrejectStatusvalue['text']=sampleStatus
                 acceptrejectStatusvalue['bg']='red'
-                print 'Status:'+sampleStatus
+                print 'ACCEPT/REJECT Status:'+sampleStatus
+            statsPad.insert(END,'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
+            for l in d.loginformation:
+                print l
+                statsPad.insert(END,l+'\n')
+                
+            d.loginformation=[]
+            print 'emty' + str(d.loginformation)
             statsPad.insert(END,'Status: ' + sampleStatus+'\n')
+            
         statsPad.insert(END,'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
+         
         statsPad.configure(state='disabled')
     except (ValueError):
         tkMessageBox.ERROR
@@ -663,6 +693,7 @@ def transitionSelection(tracelog,*args):
         except (IndexError,AttributeError,ValueError):
             tkMessageBox.showerror("Error", "Please select an entry if exists or try again")
         
+    '''    
     def onDouble():
         """
         function to read the listbox selection
@@ -680,7 +711,7 @@ def transitionSelection(tracelog,*args):
             listBoxTop.delete(index)
         except (ValueError,IndexError):
             pass
-            
+    '''        
     def generateFSMGraph():
         if len(listBoxTop.get(0, END))==0:
             tkMessageBox.showerror("No entry","There is no mapping entry.Please add mapping entry first")
