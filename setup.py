@@ -38,7 +38,7 @@ src_path = os.path.dirname(os.path.realpath(__file__)) + '/src'
 sys.path.insert(0, src_path)
 from fsm import __version__
 
-setup(name='python-fsm',
+setup(name='kTailFSM',
       version=__version__,
       license='BSD',
       description='Finite State Machines',
@@ -48,6 +48,6 @@ setup(name='python-fsm',
       url='https://github.com/lnerit/ktailFSM',
       download_url='http://python-fsm.googlecode.com/files/python-fsm-%s.tar.gz' % __version__,
       package_dir={'': 'src'},
-      py_modules=['fsm','ktail','State'],
+      py_modules=['fsm','ktail','State','gui','dfa','resizeimage'],
      )
 
