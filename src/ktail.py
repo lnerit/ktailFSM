@@ -278,7 +278,7 @@ class kTails():
                                 
             print 'Sample Transition Mapping:' + str(sampleTransitionmapping)
             
-            alphabet.clear()
+            #alphabet.clear()
             for k in sampleTransitionmapping.iterkeys():
                 p,q=k
                 alphabet.add(q)
@@ -320,7 +320,7 @@ class kTailFSMGraph(object):
     transDict={}
     getUniqueStates = set()
     alphabetfromtrace=OrderedDict()
-    
+    ndfaloginfor=[]
     def __init__(self, params):
         pass
         '''
@@ -341,7 +341,36 @@ class kTailFSMGraph(object):
     def getUniqueStates(self):
         self.getUniqueStates=set()
         return self.getUniqueStates
-
+    
+    def duplicate_dictionary_check(self,statemap,specific_word=''):
+            initial_state=None
+            next_states=set()
+            label=''
+            for k,d in statemap.items():
+                for key_a in d:
+                    for key_b in d:
+                        if key_a == key_b:
+                            break
+                        for item in d[key_a]:
+                            if (item in d[key_b]):
+                                if specific_word:
+                                    if specific_word == item:
+                                        next_states.add(key_a)
+                                        next_states.add(key_b)
+                                        label=item
+                                        initial_state=k
+                                        print 'Non-Deterministic Path detected at State: '+str(initial_state) + \
+                                        ' [Label='+label +'] Next Transitions States:['+str(next_states)+']'
+                                        
+                                        kTailFSMGraph.ndfaloginfor.append('Non-Deterministic Path detected at State: '+str(initial_state) + \
+                                        ' [Label='+label +'] Next Transitions States:['+str(next_states)+']')
+                                
+                                
+                                
+                            #break
+                        
+            #return 'Non-Deterministic Path detected at State: '+str(initial_state) + \
+                                ' [Label='+label +'] Next Transitions States:['+str(next_states)+']'
     #def generateStateTransition(self,loadEquiState,tmpDictx,stateAliasList,status):
     def generateStateTransition(self,loadEquiState,tmpDictx,dotFile):
         ktailx=loadEquiState
@@ -402,7 +431,7 @@ class kTailFSMGraph(object):
                             kTailFSMGraph.stateMap[z][int(st[1])]=f
                             
         print 'statemap'+str(kTailFSMGraph.stateMap)
-       
+               
         #Here we appy the state transitions to create a finite state machine
         ktail = FiniteStateMachine('K-TAIL')
         kTailFSMGraph.alphabetfromtrace.clear()
@@ -411,7 +440,6 @@ class kTailFSMGraph(object):
                 for c in kvx:
                     State(nx).update({kvx[c]:State(c)})
                     print 'State Transition: ' +str(nx) + '-->'+str(c) + '[label='+kvx[c] +']'
-                    
                     kTailFSMGraph.alphabetfromtrace[(nx,kvx[c])]=c
                 #Define initial state    
                 if nx==0:
