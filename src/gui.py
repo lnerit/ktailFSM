@@ -58,16 +58,8 @@ def fileOpen():
 def importTraces():
         #Import Traces from file and display on textPad
         try:
-            #contents=[]
             tracePad.delete('1.0', END) #clear the textbox before loading traces
-            print file(fName.get(), "r").read().replace("\n", ", ")
-            #with open(fName.get(), 'r') as my_file:
-            #    txt=''
-            #    for line in my_file:
-                    #contents.append(line.rstrip().split(','))
-            #        line=line.strip().replace('\n',',')
-            #        contents.append(line)
-                    #print str(line+'\n').replace('\n', ',')
+            #print file(fName.get(), "r").read().replace("\n", ", ")
             
             row=file(fName.get(), "r").read().replace("\n", ", ")
             tracePad.insert(0.0, row)
@@ -130,7 +122,6 @@ def loadFSMImage():
         tkMessageBox.ERROR
         return
     
-
 def closeWindow():
     win.destroy()
             
@@ -142,9 +133,6 @@ def configRowCol(objectx,weight):
 def configGrid(objectx,col,row,colspan,rowspan):
     objectx.grid(column=col,row=row,rowspan=rowspan, columnspan=colspan, sticky=(tk.N, tk.S, tk.W, tk.E))
     return objectx
-
-#def resize(self, event):
-#    self.font = tkFont(size = stateDiagramFrame.winfo_height())
 
 def setScrollBar(canvas,frame):
     hbar=Scrollbar(frame,orient=HORIZONTAL)
@@ -158,15 +146,12 @@ def setScrollBar(canvas,frame):
     
 #Add canvas frame for canvas area to draw image
 
-stateDiagramFramePreview=ttk.Frame(win)
-stateDiagramFramePreview.pack(side=BOTTOM,fill='x')
-
 #Build LabelFrame for the objects on the GUI
-objFrame=ttk.LabelFrame(win,text='Trace Input')
+objFrame=ttk.LabelFrame(win,text='Trace Log file name...')
 configRowCol(objFrame,1)
 objFrame.pack(fill=BOTH,side=tk.TOP)
 
-filenamePadFrame=ttk.LabelFrame(objFrame,text="File name")
+filenamePadFrame=ttk.LabelFrame(objFrame)
 filenamePadFrame.grid(column=0,row=2,sticky='ewns')
 configRowCol(filenamePadFrame,1)
 
@@ -180,7 +165,7 @@ configRowCol(statsFrame,1)
 statsFrame.pack(fill=BOTH,anchor='s')
 
 #Add a frame for the stats display text area
-statsTextDisplayFrame=ttk.LabelFrame(statsFrame,text='DisplayLog...',width=50,height=100)
+statsTextDisplayFrame=ttk.LabelFrame(statsFrame,width=50,height=100)
 #statsTextDisplayFrame.grid(column=0,row=2,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
 configGrid(statsTextDisplayFrame,0,2,1,1)
 configRowCol(statsTextDisplayFrame,1)
@@ -214,9 +199,6 @@ def displaysampleAutomata():
     else:
         frameSampleDisplay.destroy()
         
-#btnClosex=ttk.Button(sampleFrame,text="Close window",command=closeWindow,width=15)
-#btnClosex.pack(side=tk.BOTTOM,anchor=tk.N,fill=BOTH)
-
 btnStatsFrame=ttk.LabelFrame(statsFrame,text='---') 
 configGrid(btnStatsFrame,2,2,1,1)
 configRowCol(btnStatsFrame,1)
@@ -253,34 +235,39 @@ def get_sInputCheck():
     return validateAgainstsample.get()
 
 #Add a button inside the tab
-btnGenerate=ttk.Button(frmInsideTab1,text="Generate Automata",width=15,command=generateAutomata)
-btnGenerate.pack(side=tk.TOP)
 sampleAutomataChk=Checkbutton(frmInsideTab1,text="Validate against sample",variable=validateAgainstsample,command=get_sInputCheck)
 sampleAutomataChk.pack(side=tk.TOP)
-
-
+btnGenerate=ttk.Button(frmInsideTab1,text="Generate Automata",width=15,command=generateAutomata)
+btnGenerate.pack(side=tk.TOP,fill=X,padx=2,pady=2)
 
 acceptrejectStatusvalue=Label(frmInsideTab1,text=sampleStatus,width=10,bg='blue')
-acceptrejectStatusvalue.pack(anchor='w',side=tk.TOP,fill=X)
-#acceptrejectStatuslbl=Label(frmInsideTab1,text="Status:",width=4)
-#acceptrejectStatuslbl.pack(anchor='w',side=tk.TOP)
+acceptrejectStatusvalue.pack(anchor='w',side=tk.TOP,fill=X,padx=2,pady=2)
+
 def displayFromBrowser():
     if len(canvas.find_all())==0:
         tkMessageBox.showinfo("FSM", 'Nothing to show.Please generate an FSM first')
         return
+    try:
+        import webbrowser
+        webbrowser.open('../graph/ktail.png')
+    except Exception:
+        tkMessageBox.showerror("Error", "Error encountered while opening the FSM") 
+def clearStatsLog():
+    statsPad.configure(state='normal')
+    statsPad.delete('1.0',END)
     
-    import webbrowser
-    webbrowser.open('../graph/ktail.png') 
+externalDisplay=ttk.Button(frmInsideTab1,text="CLR\nLog",command=clearStatsLog,width=5)
+externalDisplay.pack(anchor='nw',side=tk.LEFT,fill=BOTH,padx=2,pady=2)
+externalDisplay2=ttk.Button(frmInsideTab1,text="Sample\nLog",command=closeWindow,width=5)
+externalDisplay2.pack(anchor='ne',side=tk.LEFT,fill=BOTH,padx=2,pady=2)
 
-externalDisplay=ttk.Button(frmInsideTab1,text="Print",command=closeWindow,width=3)
-externalDisplay.pack(anchor='w',fill=X)
-externalDisplay1=ttk.Button(frmInsideTab1,text="Browser View",command=displayFromBrowser,width=3)
-externalDisplay1.pack(anchor='w',fill=X)
+externalDisplay1=ttk.Button(frmInsideTab1,text="Browser View",command=displayFromBrowser,width=10)
+externalDisplay1.pack(anchor='w',fill=X,padx=2,pady=2)
 
 try:
     photo1 = tk.PhotoImage(file="../icon/dialog_cancel.png")
-    btnClose=ttk.Button(frmInsideTab1,text="Close window",image=photo1,command=closeWindow,width=10)
-    btnClose.pack(side=BOTTOM,anchor='w',fill=X)
+    btnClose=ttk.Button(frmInsideTab1,text="Close window",image=photo1,command=closeWindow,width=15)
+    btnClose.pack(side=tk.BOTTOM,anchor='w',fill=tk.BOTH,padx=2,pady=2)
     #configRowCol(btnClose,1)
 except TclError:
     tkMessageBox.showerror("Icon Error", "Unable to load icon")
@@ -397,8 +384,8 @@ fName=ttk.Entry(filenamePadFrame,width=30,textvariable=fileName)
 fName.grid(column=0,row=2,sticky='ewns')
 configRowCol(fName,1)
 
-action=ttk.Button(filenamePadFrame,text="Open Log",command=fileOpen,width=12)
-action.grid(column=1,row=2)
+action=ttk.Button(filenamePadFrame,text="Open Log",command=fileOpen,width=15)
+action.grid(column=1,row=2,padx=2,pady=2)
 configRowCol(action,1)
 
 #create an Import button which will trigger import event to lo traces into the textPad
@@ -411,7 +398,7 @@ configGrid(samplePad,0,0,1,1)
 #configRowCol(samplePad,1)
 
 try:
-    importButton=ttk.Button(frameMultitrace,text="Load Traces",command=importTraces,width=10)
+    importButton=ttk.Button(frameMultitrace,text="Load Traces",command=importTraces,width=15)
     importButton.grid(column=1,row=5,sticky='w')
     configRowCol(importButton,1)
 except "Empty Log":
@@ -419,6 +406,7 @@ except "Empty Log":
 
 sampleInputGenerateButton = ttk.Button(tracePadFrame,text='Process Sample',width=15,command=generateSampleAutomata)
 configGrid(sampleInputGenerateButton,1,0,1,1)
+sampleInputGenerateButton.grid(padx=2,pady=2)
 
 tracePad = ScrolledText(tracePadFrame, width=10,height=3)
 configGrid(tracePad,0,1,1,1)
@@ -448,15 +436,12 @@ stateDiagramFrame.pack(fill=BOTH,anchor='s')
 
 #Add a canvas to the stateDiagramFrame
 
-canvas1Frame=ttk.LabelFrame(stateDiagramFrame,text="Canvas1")
-canvas1Frame.pack(side="top",fill=BOTH)
-
-canvas=Canvas(canvas1Frame,bg='#FFFFFF',height=ht)
+canvas=Canvas(stateDiagramFrame,bg='#FFFFFF',height=ht)
 #canvas.scalex=1.0
 canvas.pack(side="top", fill=BOTH, expand=True)
 
 #Add a scrollbar for the canvas
-setScrollBar(canvas,canvas1Frame)
+setScrollBar(canvas,stateDiagramFrame)
 #bind scroll left-to-right scroll events to the canvas
 canvas.bind('<4>', lambda event : canvas.xview('scroll', -1, 'units'))
 canvas.bind('<5>', lambda event : canvas.xview('scroll', 1, 'units'))
@@ -535,9 +520,14 @@ def loadStatsLogToTextBox(k,lst,flag):
             accept_states=set()
             if len(acceptStatestEntry.get())>0:
                 #DFA.accept_states={int(destStateTextVariable.get())}
-                
                 for item in str(acceptStatestEntry.get()).split(','):
-                    accept_states.add(int(item))
+                    if item.isdigit():
+                        accept_states.add(int(item))
+                    else:
+                        acceptrejectStatusvalue['text']=''
+                        acceptrejectStatusvalue['bg']='grey'
+                        tkMessageBox.showerror("State Error",'Accepting state requires an integer value')
+                        return
                 #accept_states={acceptStatestEntry.get()}
                 print 'Accepting States: ' + str(acceptStatestEntry.get())
                 statsPad.insert(END,'Accepting State: ' + str(acceptStatestEntry.get())+'\n')
@@ -560,7 +550,7 @@ def loadStatsLogToTextBox(k,lst,flag):
             statsPad.insert(END,'Alphabet from sample: ' + str( alphabet)+'\n')
             d=DFA(getUniqueStatesSample, alphabet,sampleTransitionmapping,start_state,accept_states,1);
             alphabetfromtrace=kTailFSMGraph.alphabetfromtrace
-            print 'yyyyyyy ' + str(sampleTransitionmapping)
+            
             testalphabet=[]
             for k,v in alphabetfromtrace.items():
                 p,q=k
@@ -693,25 +683,7 @@ def transitionSelection(tracelog,*args):
         except (IndexError,AttributeError,ValueError):
             tkMessageBox.showerror("Error", "Please select an entry if exists or try again")
         
-    '''    
-    def onDouble():
-        """
-        function to read the listbox selection
-        and put the result in an entry widget
-        """
-        if listBoxTop.curselection()[0] is None:
-            tkMessageBox.showerror("No entry","Nothing to remove")
-            return
-        
-        try:
-            # get selected line index
-            index = listBoxTop.curselection()[0]
-            # get the line's text
-            manualMappingList.remove(str(listBoxTop.curselection()))
-            listBoxTop.delete(index)
-        except (ValueError,IndexError):
-            pass
-    '''        
+    
     def generateFSMGraph():
         if len(listBoxTop.get(0, END))==0:
             tkMessageBox.showerror("No entry","There is no mapping entry.Please add mapping entry first")
@@ -790,15 +762,6 @@ def transitionSelection(tracelog,*args):
     for child in mainFrame.winfo_children(): child.grid_configure(padx=4, pady=4)
                                     
     root.mainloop()
-
-
-
-#Add a button to close the window inside the tab
-#closeButtonFrame=Labelframe(win)
-#closeButtonFrame.pack(side=LEFT,anchor=tk.S,fill=BOTH)
-
-
-
 
 win.mainloop()
 
