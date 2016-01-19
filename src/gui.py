@@ -356,7 +356,6 @@ def generateSampleAutomata():
             srcState.current(0)
         else:
             pass
-            
         acceptStatestEntry.delete(0,END)
         destState.delete(0,END)
         destState['values'] = ([k for k in ktail.getUniqueStatesSample])
@@ -500,10 +499,16 @@ def loadStatsLogToTextBox(k,lst,flag):
         #statsPad.insert(END,'Finalised States: '+ str(kTailFSMGraph.getUniqueStates)+'\n')
         statsPad.insert(END,'State-Label in Trace 1: '+ str(kTailFSMGraph.transDict)+'\n')
         statsPad.insert(END,'State Transitions:-----------------------------------------------------------------------------------------------------------------\n')
+        symbol=set()
         for nx,kvx in ktfsm.stateMap.items():
                 for c in kvx:
                     statsPad.insert(END,str(nx) + '-->'+str(c) + '[label='+kvx[c] +']\n')
-    
+                    symbol.add(kvx[c])
+        for d in symbol:
+            ktfsm.duplicate_dictionary_check(ktfsm.stateMap,d)
+        for ndfa in  ktfsm.ndfaloginfor:   
+            statsPad.insert(END,ndfa+'\n')
+        
         statsPad.insert(END,'***********************************************************************************************************************************\n')
         
         if validateAgainstsample.get()==1:
@@ -560,12 +565,12 @@ def loadStatsLogToTextBox(k,lst,flag):
             
             sampleStatus=''
             if d.run_with_input_list(testalphabet):
-                sampleStatus=' ACCEPT'
+                sampleStatus='AUTOMATA ACCEPTED'
                 acceptrejectStatusvalue['text']=sampleStatus
                 acceptrejectStatusvalue['bg']='green'
                 print 'Status:'+sampleStatus
             else:
-                sampleStatus='REJECT'
+                sampleStatus='AUTOMATA REJECTED'
                 acceptrejectStatusvalue['text']=sampleStatus
                 acceptrejectStatusvalue['bg']='red'
                 print 'ACCEPT/REJECT Status:'+sampleStatus
