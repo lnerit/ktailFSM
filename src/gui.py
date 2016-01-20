@@ -66,9 +66,9 @@ def importTraces():
             #tracePad.insert(0,0, )   
         except IOError:
             if len(fName.get())==0 or len(fName.get())==1:
-                tkMessageBox.showinfo("File Error","No trace log file specified.Please selected a log file")
+                tkMessageBox.showerror("File Error","No trace log file specified.Please selected a log file")
             else:
-                tkMessageBox.showinfo("IOError", IOError.message)
+                tkMessageBox.showerror("IOError", IOError.message)
   
 def text_FromTextBox(txtPad):
         columns[:] = [] #clear existing items in the list
@@ -83,13 +83,16 @@ def generateAutomata():
     import time
     start_time=time.time()
     if len(tracePad.get('1.0',END))==0 or len(tracePad.get('1.0',END))==1:
-        tkMessageBox.showinfo("Empty trace","The trace is empty.Please select a trace log.")
+        tkMessageBox.showerror("Empty trace","The input trace is empty.Please insert from a trace log.")
         return
     #try:
     text_FromTextBox(tracePad.get('1.0', END).split(','))
     statsPad.configure(state='normal')
-    
-    loadStatsLogToTextBox(int(box.get()),columns,1)
+    if len(columns)<2:
+        tkMessageBox.showerror("Trace", "Insert a sequence of traces")
+        return
+    else:
+        loadStatsLogToTextBox(int(box.get()),columns,1)
 
     loadFSMImage()
 
@@ -170,16 +173,17 @@ statsTextDisplayFrame=ttk.LabelFrame(statsFrame,width=50,height=100)
 configGrid(statsTextDisplayFrame,0,2,1,1)
 configRowCol(statsTextDisplayFrame,1)
 
+
+
 def displaysampleAutomata():
     global samplaCanvas
     global frameSampleDisplay
     if sInputCheck.get()==1:
         import resizeimage
         frameSampleDisplay=ttk.LabelFrame(statsFrame,width=300,height=200)
-        configGrid(frameSampleDisplay,1,2,1,1)
-
         samplaCanvas=Canvas(frameSampleDisplay,bg='#FFFFFF',height=200,width=300)
-        samplaCanvas.pack(side=LEFT,fill=BOTH)
+        configGrid(frameSampleDisplay,1,2,1,1)
+        samplaCanvas.pack(side=tk.TOP,fill=BOTH)
         filename='../graph/sample.png'
         resizeimage.resizeImage(filename,0.5)
         img = PhotoImage(file="../graph/sample0.5.png")
@@ -188,17 +192,34 @@ def displaysampleAutomata():
         
         samplaCanvas.delete(img) #reset canvas
         samplaCanvas.create_image(0, 80, anchor='nw',image=img,tags="bg_img")
-        hbar=Scrollbar(frameSampleDisplay,orient=HORIZONTAL)
-        hbar.pack(side=BOTTOM,fill=X)
-        hbar.config(command=samplaCanvas.xview)
         vbar=Scrollbar(frameSampleDisplay,orient=VERTICAL)
-        vbar.pack(side=RIGHT,fill=Y)
+        vbar.pack(side=tk.RIGHT,fill=Y,anchor='ne')
+        hbar=Scrollbar(frameSampleDisplay,orient=HORIZONTAL)
+        hbar.pack(side=tk.TOP,fill=X,anchor='sw')
+        hbar.config(command=samplaCanvas.xview)
         vbar.config(command=samplaCanvas.yview)
         canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-       
-    else:
-        frameSampleDisplay.destroy()
         
+        samplaCanvasLogFrame=Canvas(frameSampleDisplay,bg='#FFFFFF',height=200,width=300)
+        samplaCanvasLogFrame.pack(side=BOTTOM)
+        displaysamplelogProcesslog=ttk.Button(samplaCanvasLogFrame,text='Process Log',width=10)
+        displaysamplelogProcesslog.pack(side=LEFT,fill=X,anchor='w')
+        displaysamplelogFSM=ttk.Button(samplaCanvasLogFrame,text='FSM',width=10)
+        displaysamplelogFSM.pack(side=LEFT,fill=X,anchor='e')
+        displaysamplelogPreview=ttk.Button(samplaCanvasLogFrame,text='Preview',width=10)
+        displaysamplelogPreview.pack(side=LEFT,fill=X,anchor='e')
+        
+        def displaysampleFromBrowsercallback(event):
+            displayFromBrowser(samplaCanvas,'sample')
+            
+        displaysamplelogPreview.bind('<ButtonRelease-1>',displaysampleFromBrowsercallback)
+        
+    else:
+        try:
+            frameSampleDisplay.destroy()
+        except Exception:
+            pass
+
 btnStatsFrame=ttk.LabelFrame(statsFrame,text='---') 
 configGrid(btnStatsFrame,2,2,1,1)
 configRowCol(btnStatsFrame,1)
@@ -217,7 +238,7 @@ kvalue_label=Label(frmInsideTab1,text="Select value for K",width=15).pack(side=t
 box_value = StringVar()
 box = ttk.Combobox(frmInsideTab1, textvariable=box_value, 
                                     state='readonly',text='k-tail',width=15,justify=RIGHT)
-#box.bind("<<ComboboxSelected>>", kValueSelectormethod)
+
 box['values'] = ('1', '2', '3','4','5')
 box.current(1)
 box.pack(side=tk.TOP)
@@ -243,15 +264,23 @@ btnGenerate.pack(side=tk.TOP,fill=X,padx=2,pady=2)
 acceptrejectStatusvalue=Label(frmInsideTab1,text=sampleStatus,width=10,bg='blue')
 acceptrejectStatusvalue.pack(anchor='w',side=tk.TOP,fill=X,padx=2,pady=2)
 
-def displayFromBrowser():
-    if len(canvas.find_all())==0:
-        tkMessageBox.showinfo("FSM", 'Nothing to show.Please generate an FSM first')
-        return
+def displayFromBrowser(Canvas,flag):
     try:
         import webbrowser
-        webbrowser.open('../graph/ktail.png')
+        if flag=='ktail':
+            if len(Canvas.find_all())==0:
+                tkMessageBox.showinfo("FSM", 'Nothing to show.Please generate an FSM first')
+                return
+            webbrowser.open('../graph/ktail.png')
+        elif flag=='sample':
+            if len(Canvas.find_all())==0:
+                tkMessageBox.showinfo("FSM", 'Nothing to show.Please generate an FSM first')
+                return
+            webbrowser.open('../graph/sample0.5.png')
     except Exception:
-        tkMessageBox.showerror("Error", "Error encountered while opening the FSM") 
+        tkMessageBox.showerror("Error", "Error encountered while opening the FSM")
+        pass 
+    
 def clearStatsLog():
     statsPad.configure(state='normal')
     statsPad.delete('1.0',END)
@@ -260,9 +289,6 @@ externalDisplay=ttk.Button(frmInsideTab1,text="CLR\nLog",command=clearStatsLog,w
 externalDisplay.pack(anchor='nw',side=tk.LEFT,fill=BOTH,padx=2,pady=2)
 externalDisplay2=ttk.Button(frmInsideTab1,text="Sample\nLog",command=closeWindow,width=5)
 externalDisplay2.pack(anchor='ne',side=tk.LEFT,fill=BOTH,padx=2,pady=2)
-
-externalDisplay1=ttk.Button(frmInsideTab1,text="Browser View",command=displayFromBrowser,width=10)
-externalDisplay1.pack(anchor='w',fill=X,padx=2,pady=2)
 
 try:
     photo1 = tk.PhotoImage(file="../icon/dialog_cancel.png")
@@ -338,8 +364,8 @@ def generateSampleAutomata():
     try:
         import time
         start_time=time.time()
-        if len(samplePad.get())==0 or len(samplePad.get())==1:
-            tkMessageBox.showinfo("Empty trace","Sample trace is empty.Please select a trace log.")
+        if len(samplePad.get())<2:
+            tkMessageBox.showerror("Empty trace","Sample trace is empty.Please select a trace log.")
             return
         #try:
         text_FromTextBox(samplePad.get().split(','))
@@ -356,14 +382,17 @@ def generateSampleAutomata():
             srcState.current(0)
         else:
             pass
-        acceptStatestEntry.delete(0,END)
+        
+        #acceptStatestEntry.delete(0,END)
         destState.delete(0,END)
         destState['values'] = ([k for k in ktail.getUniqueStatesSample])
         if len( destState['values'])>0:
             print destState['values'][-1]
             destState.current(destState['values'][-1])
-            acceptStatestEntry.insert(END,str(destStateTextVariable.get()))
-            #acceptStatestEntry.insert(END, destState.current(destState['values'][-1]))
+            if len(acceptStatestEntry.get())>0:
+                pass
+            else:
+                acceptStatestEntry.insert(END,str(destStateTextVariable.get()))
             
         else:
             pass
@@ -445,6 +474,13 @@ setScrollBar(canvas,stateDiagramFrame)
 canvas.bind('<4>', lambda event : canvas.xview('scroll', -1, 'units'))
 canvas.bind('<5>', lambda event : canvas.xview('scroll', 1, 'units'))
 canvas.focus_set()
+externalDisplay1=ttk.Button(frmInsideTab1,text="Browser View",width=10)
+externalDisplay1.pack(anchor='w',fill=X,padx=2,pady=2)
+
+def displayFromBrowsercallback(event):
+    displayFromBrowser(canvas,'ktail')
+    
+externalDisplay1.bind('<ButtonRelease-1>',displayFromBrowsercallback)
 
 def callChildWindow():
 
@@ -767,6 +803,8 @@ def transitionSelection(tracelog,*args):
     for child in mainFrame.winfo_children(): child.grid_configure(padx=4, pady=4)
                                     
     root.mainloop()
-
-win.mainloop()
-
+    
+try:
+    win.mainloop()
+except (TclError):
+    pass
