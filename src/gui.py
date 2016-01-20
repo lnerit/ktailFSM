@@ -16,7 +16,7 @@ import ttk
 from tkFileDialog import askopenfilename
 from ScrolledText import *
 from Tkinter import  Canvas, PhotoImage, StringVar, Label, Scrollbar,\
-Listbox, Checkbutton, IntVar, TclError, Menu,Toplevel
+Listbox, Checkbutton, IntVar, TclError, Menu,Toplevel, LabelFrame
 import tkMessageBox
 from fsm import acceptingstates
 
@@ -174,58 +174,60 @@ configRowCol(statsTextDisplayFrame,1)
 
 def displaysampleAutomata(event):
     global frameSampleDisplay
-    
-    if (srcStateTextVariable.get())=='':
-        tkMessageBox.showerror("Initial State","Please select an initial state first.")
-        return
-    elif (destStateTextVariable.get())=='':
-        tkMessageBox.showerror("Accepting States","Please select accepting states first.")
-        return
-    
-    if sInputCheck.get()==1:
-        import resizeimage
-        frameSampleDisplay=ttk.LabelFrame(statsFrame,width=300,height=200)
-        samplaCanvas=Canvas(frameSampleDisplay,bg='#FFFFFF',height=200,width=300)
-        configGrid(frameSampleDisplay,1,2,1,1)
-        samplaCanvas.pack(side=tk.TOP,fill=BOTH)
-        filename='../graph/sample.png'
+    try:
+        if (srcStateTextVariable.get())=='':
+            tkMessageBox.showerror("Initial State","Please select an initial state first.")
+            return
+        elif (destStateTextVariable.get())=='':
+            tkMessageBox.showerror("Accepting States","Please select accepting states first.")
+            return
         
-        def displaySampleFSM():
-            resizeimage.resizeImage(filename,0.5)
-            img = PhotoImage(file="../graph/sample0.5.png")
-            label1.image = img # keep a reference!
+        if sInputCheck.get()==1:
+            import resizeimage
+            frameSampleDisplay=ttk.LabelFrame(statsFrame,width=300,height=200)
+            samplaCanvas=Canvas(frameSampleDisplay,bg='#FFFFFF',height=200,width=300)
+            configGrid(frameSampleDisplay,1,2,1,1)
+            samplaCanvas.pack(side=tk.TOP,fill=BOTH)
+            filename='../graph/sample.png'
             
-            samplaCanvas.delete(img) #reset canvas
-            samplaCanvas.create_image(0, 80, anchor='nw',image=img,tags="bg_img")
+            def displaySampleFSM():
+                resizeimage.resizeImage(filename,0.5)
+                img = PhotoImage(file="../graph/sample0.5.png")
+                label1.image = img # keep a reference!
+                
+                samplaCanvas.delete(img) #reset canvas
+                samplaCanvas.create_image(0, 80, anchor='nw',image=img,tags="bg_img")
+                
+            displaySampleFSM()
+            vbar=Scrollbar(frameSampleDisplay,orient=VERTICAL)
+            vbar.pack(side=tk.RIGHT,fill=Y,anchor='ne')
+            hbar=Scrollbar(frameSampleDisplay,orient=HORIZONTAL)
+            hbar.pack(side=tk.TOP,fill=X,anchor='sw')
+            hbar.config(command=samplaCanvas.xview)
+            vbar.config(command=samplaCanvas.yview)
+            canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
             
-        displaySampleFSM()
-        vbar=Scrollbar(frameSampleDisplay,orient=VERTICAL)
-        vbar.pack(side=tk.RIGHT,fill=Y,anchor='ne')
-        hbar=Scrollbar(frameSampleDisplay,orient=HORIZONTAL)
-        hbar.pack(side=tk.TOP,fill=X,anchor='sw')
-        hbar.config(command=samplaCanvas.xview)
-        vbar.config(command=samplaCanvas.yview)
-        canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        
-        samplaCanvasLogFrame=Canvas(frameSampleDisplay,bg='#FFFFFF',height=200,width=300)
-        samplaCanvasLogFrame.pack(side=BOTTOM)
-        displaysamplelogProcesslog=ttk.Button(samplaCanvasLogFrame,text='Process Log',width=10)
-        displaysamplelogProcesslog.pack(side=LEFT,fill=X,anchor='w')
-        displaysamplelogFSM=ttk.Button(samplaCanvasLogFrame,text='FSM',width=10,command=combine_funcs(generateSampleAutomata,displaySampleFSM))
-        
-        displaysamplelogFSM.pack(side=LEFT,fill=X,anchor='e')
-        
-        displaysamplelogPreview=ttk.Button(samplaCanvasLogFrame,text='Preview',width=10)
-        displaysamplelogPreview.pack(side=LEFT,fill=X,anchor='e')
-        
-        def displaysampleFromBrowsercallback(event):
-            displayFromBrowser(samplaCanvas,'sample')
+            samplaCanvasLogFrame=Canvas(frameSampleDisplay,bg='#FFFFFF',height=200,width=300)
+            samplaCanvasLogFrame.pack(side=BOTTOM)
+            displaysamplelogProcesslog=ttk.Button(samplaCanvasLogFrame,text='Process Log',width=10)
+            displaysamplelogProcesslog.pack(side=LEFT,fill=X,anchor='w')
+            displaysamplelogFSM=ttk.Button(samplaCanvasLogFrame,text='FSM',width=10,command=combine_funcs(generateSampleAutomata,displaySampleFSM))
             
-        displaysamplelogPreview.bind('<ButtonRelease-1>',displaysampleFromBrowsercallback)
-        
-    elif sInputCheck.get()==0:
-        #frameSampleDisplay.pack_forget()
-        frameSampleDisplay.grid_forget() #Remove the Frame
+            displaysamplelogFSM.pack(side=LEFT,fill=X,anchor='e')
+            
+            displaysamplelogPreview=ttk.Button(samplaCanvasLogFrame,text='Preview',width=10)
+            displaysamplelogPreview.pack(side=LEFT,fill=X,anchor='e')
+            
+            def displaysampleFromBrowsercallback(event):
+                displayFromBrowser(samplaCanvas,'sample')
+                
+            displaysamplelogPreview.bind('<ButtonRelease-1>',displaysampleFromBrowsercallback)
+            
+        elif sInputCheck.get()==0:
+            #frameSampleDisplay.pack_forget()
+            frameSampleDisplay.grid_forget() #Remove the Frame
+    except (NameError,Exception):
+        pass
 
     
 
@@ -390,6 +392,7 @@ def generateSampleAutomata():
             else:
                 pass
             ktfsm=kTailFSMGraph('KTAIL')
+            kTailFSMGraph.accepting_states.clear()#Clear any existing accepting states from prvious runs
             #acceptStatestEntry.delete(0,END)
             destState.delete(0,END)
             destState['values'] = ([k for k in ktail.getUniqueStatesSample])
@@ -506,10 +509,26 @@ def callChildWindow():
         kt=kTails('K-TAILS')
         kt.FiniteAutomata(columns)
         transitionSelection(kt.manualProcessingLog)
-        
+def callHelpdWindow():
+    textvar='K-TAIL State Transition Software\nVersion:1.0\nAuthor:Lenz L Nerit\University:Victoria University of Wellington\n'
+    helpWind=Toplevel()
+    helpWind.resizable(width=FALSE, height=FALSE)
+    frame=ttk.Frame(helpWind)
+    frm=LabelFrame(frame,text='test')
+    frm.pack()
+    lbl=Label(frm,text="sampleStatus",width=10,bg='blue')
+    lbl.pack(fill=BOTH)
+    helpWind.mainloop()
+    
 editmenu = Menu(menubar, tearoff=0)
 editmenu.add_command(label="Set Manual", command=callChildWindow)
 menubar.add_cascade(label="Manual Setting", menu=editmenu)
+
+
+helpmenu= Menu(menubar, tearoff=0)
+helpmenu.add_command(label="Help", command=callHelpdWindow)
+menubar.add_cascade(label="Help", menu=helpmenu)
+
 # display the menu
 win.config(menu=menubar)
 
