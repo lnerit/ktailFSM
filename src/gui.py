@@ -40,6 +40,7 @@ multitrace={}
 sampleStatus=''
 #Check button to validate trace against the sample trace input automata
 sInputCheck=IntVar()
+from idlelib.ToolTip import *
 
 def __init__(self,param):
     self.log=logging.getLogger('gui.py')
@@ -173,7 +174,7 @@ configRowCol(statsTextDisplayFrame,1)
 
 def displaysampleAutomata(event):
     global frameSampleDisplay
-    print 'xx'+str (srcStateTextVariable.get()) 
+    
     if (srcStateTextVariable.get())=='':
         tkMessageBox.showerror("Initial State","Please select an initial state first.")
         return
@@ -295,8 +296,6 @@ def clearStatsLog():
     
 externalDisplay=ttk.Button(frmInsideTab1,text="Clear\nLog",command=clearStatsLog,width=5)
 externalDisplay.pack(anchor='nw',side=tk.LEFT,fill=BOTH,padx=2,pady=2)
-#externalDisplay2=ttk.Button(frmInsideTab1,text="Sample\nLog",command=closeWindow,width=5)
-#externalDisplay2.pack(anchor='ne',side=tk.LEFT,fill=BOTH,padx=2,pady=2)
 
 try:
     photo1 = tk.PhotoImage(file="../icon/dialog_cancel.png")
@@ -362,7 +361,6 @@ listBoxTop.config(yscrollcommand=scrollBar.set)
 sampleInputOption=Checkbutton(listFrame,text='Display Automata',variable=sInputCheck)
 sampleInputOption.pack(side=tk.LEFT, fill='x',anchor='w')
 sampleInputOption.bind('<ButtonRelease-1>',displaysampleAutomata)
-
 
 nb.add(master_bar, text="Sample Input")
 
@@ -455,8 +453,6 @@ except "Empty Log":
 sampleInputGenerateButton = ttk.Button(tracePadFrame,text='Process Sample',width=15,command=generateSampleAutomata)
 configGrid(sampleInputGenerateButton,1,0,1,1)
 sampleInputGenerateButton.grid(padx=2,pady=2)
-
-
 
 # create a pulldown menu, and add it to the menu bar
 menubar = Menu(win)
@@ -567,9 +563,9 @@ def loadStatsLogToTextBox(k,lst,flag):
         
         if validateAgainstsample.get()==1:
             statsPad.insert(END,'Processing Automata for Sample Input\n')
+            
             from dfa import DFA
             if srcStateTextVariable is not None:
-                #DFA.start_state=int(srcStateTextVariable.get())
                 start_state=int(srcStateTextVariable.get())
                 print 'Initial State: ' + str(srcStateTextVariable.get())
                 statsPad.insert(END,'Initial State: '+ str(srcStateTextVariable.get())+'\n')
@@ -578,7 +574,6 @@ def loadStatsLogToTextBox(k,lst,flag):
                 #return
             accept_states=set()
             if len(acceptStatestEntry.get())>0:
-                #DFA.accept_states={int(destStateTextVariable.get())}
                 for item in str(acceptStatestEntry.get()).split(','):
                     if item.isdigit():
                         accept_states.add(int(item))
@@ -587,7 +582,7 @@ def loadStatsLogToTextBox(k,lst,flag):
                         acceptrejectStatusvalue['bg']='grey'
                         tkMessageBox.showerror("State Error",'Accepting state requires an integer value')
                         return
-                #accept_states={acceptStatestEntry.get()}
+                
                 print 'Accepting States: ' + str(acceptStatestEntry.get())
                 statsPad.insert(END,'Accepting State: ' + str(acceptStatestEntry.get())+'\n')
             else:
@@ -633,8 +628,7 @@ def loadStatsLogToTextBox(k,lst,flag):
                 print l
                 statsPad.insert(END,l+'\n')
                 
-            d.loginformation=[]
-            print 'emty' + str(d.loginformation)
+            d.loginformation=[] #reset the log information dictionary
             statsPad.insert(END,'Status: ' + sampleStatus+'\n')
             
         statsPad.insert(END,'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
