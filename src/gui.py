@@ -62,8 +62,7 @@ def importTraces():
             #print file(fName.get(), "r").read().replace("\n", ", ")
             
             row=file(fName.get(), "r").read().replace("\n", ", ")
-            tracePad.insert(0.0, row)
-            #tracePad.insert(0,0, )   
+            tracePad.insert(0.0, row)   
         except IOError:
             if len(fName.get())==0 or len(fName.get())==1:
                 tkMessageBox.showerror("File Error","No trace log file specified.Please selected a log file")
@@ -99,17 +98,10 @@ def generateAutomata():
     print("--- %s seconds ---" % (time.time() - start_time))
         
             
-    #except "Error":
-    #    tkMessageBox.showerror("Error", "An error has occured!")
-        #pass
-
 def kValueSelectormethod (self):
         print("method is called")
         
-#If there is no image file ktail.png, then create a blank image file to draw the transition graph       
-
 def loadFSMImage():
-    
     try:
         img = PhotoImage(file="../graph/ktail.png")
         label.image = img # keep a reference!
@@ -121,7 +113,6 @@ def loadFSMImage():
         canvas.create_image(x, y, anchor=tk.CENTER,image=img,tags="bg_img")
        
     except TclError:
-        #If image file is missing, we generate a new image file
         tkMessageBox.ERROR
         return
     
@@ -172,7 +163,6 @@ statsTextDisplayFrame=ttk.LabelFrame(statsFrame,width=50,height=100)
 #statsTextDisplayFrame.grid(column=0,row=2,rowspan=1, columnspan=1, sticky=(tk.N, tk.S, tk.W, tk.E))
 configGrid(statsTextDisplayFrame,0,2,1,1)
 configRowCol(statsTextDisplayFrame,1)
-
 
 
 def displaysampleAutomata():
@@ -294,7 +284,7 @@ try:
     photo1 = tk.PhotoImage(file="../icon/dialog_cancel.png")
     btnClose=ttk.Button(frmInsideTab1,text="Close window",image=photo1,command=closeWindow,width=15)
     btnClose.pack(side=tk.BOTTOM,anchor='w',fill=tk.BOTH,padx=2,pady=2)
-    #configRowCol(btnClose,1)
+    
 except TclError:
     tkMessageBox.showerror("Icon Error", "Unable to load icon")
     
@@ -306,20 +296,18 @@ configGrid(sampleFrame,1,2,1,1)
 configRowCol(sampleFrame,1)
 innersampleFrame=ttk.LabelFrame(sampleFrame)
 innersampleFrame.grid(column=0,row=0,sticky='ewns',)
-#configGrid(innersampleFrame,0,0,1,1)
+
 configRowCol(innersampleFrame,1)
 
 labelSource=ttk.Label(innersampleFrame,text="Start Start", justify=LEFT)
 labelSource.grid(column=0, row=0, sticky="nw")
-#labelSource.pack(side=tk.TOP,anchor='w')   
+
 srcStateTextVariable=StringVar()
 srcState = ttk.Combobox(innersampleFrame,width=10,textvariable=srcStateTextVariable)
 srcState.delete(0, END)
-#srcState['values'] = ([k for k in columns])
-srcState.grid(column=1, row=0, sticky="ne")
-#srcState.pack(side=tk.TOP, anchor='e')#(column=1, row=0, sticky="e")          
+srcState.grid(column=1, row=0, sticky="ne")          
 srcState.state(['readonly'])
-#srcState.bind("<<ComboboxSelected>>", kValueSelectormethod)
+
 
     # Destination label
 labelDestination=ttk.Label(innersampleFrame,text="Accept States",justify=LEFT)
@@ -331,12 +319,12 @@ def acceptStatesSelected(event):
         acceptStatestEntry.insert(END,str(destStateTextVariable.get()))
     else:
         acceptStatestEntry.insert(END,','+ str(destStateTextVariable.get()))
+        
     # destination combobox
 destStateTextVariable=StringVar()
 destState = ttk.Combobox(innersampleFrame,width=4,textvariable=destStateTextVariable)
 destState.delete(0, END)
 destState.grid(column=1 , row=1, sticky="nw")
-#destState.pack(tk.TOP)
 destState.state(['readonly'])
 destState.bind("<<ComboboxSelected>>", acceptStatesSelected)
 
@@ -356,7 +344,6 @@ listBoxTop.config(yscrollcommand=scrollBar.set)
 
 sampleInputOption=Checkbutton(listFrame,text='Display Automata',variable=sInputCheck,command=displaysampleAutomata)
 sampleInputOption.pack(side=tk.LEFT, fill='x',anchor='w')
-#sampleInputOption.bind('<>',displaysampleAutomata)
 
 nb.add(master_bar, text="Sample Input")
 
@@ -423,7 +410,6 @@ multitraceOption=IntVar()
 
 samplePad = ttk.Entry(tracePadFrame, width=20)
 configGrid(samplePad,0,0,1,1)
-#configRowCol(samplePad,1)
 
 try:
     importButton=ttk.Button(frameMultitrace,text="Load Traces",command=importTraces,width=15)
