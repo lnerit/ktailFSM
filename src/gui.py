@@ -40,7 +40,7 @@ multitrace={}
 sampleStatus=''
 #Check button to validate trace against the sample trace input automata
 sInputCheck=IntVar()
-from idlelib.ToolTip import *
+
 
 def __init__(self,param):
     self.log=logging.getLogger('gui.py')
@@ -703,7 +703,6 @@ def transitionSelection(tracelog,*args):
             root.focus()
             return
         else:
-            
             st=get_apha(srcState.get())
             set_listTop(listBoxTop,str(get_num(srcState.get())) +'-->'+ str(destState.get()) + '[label='+st+']')
             manualMappingList.append(str(get_num(srcState.get())) +'-->'+ str(destState.get()))
