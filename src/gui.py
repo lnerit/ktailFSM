@@ -382,9 +382,11 @@ def generateSampleAutomata():
             kt=kTails('K-TAILS')
             print 'CALL FROM SAMPLE...'
             acceptingstates.clear()#Reset the existing accepting states from previous executions
+            ktail.samplealphabet.clear()
+            kt.alphabet=[]
             
             kt.do_kTailEquivCheck(int(box.get()),columns,0)
-            
+            listBoxTop.delete(0, END)
             srcState.delete(0,END)
             srcState['values'] = ([k for k in ktail.getUniqueStatesSample])
             if len( srcState['values'])>0:
@@ -394,6 +396,7 @@ def generateSampleAutomata():
             ktfsm=kTailFSMGraph('KTAIL')
             kTailFSMGraph.accepting_states.clear()#Clear any existing accepting states from prvious runs
             #acceptStatestEntry.delete(0,END)
+            
             destState.delete(0,END)
             destState['values'] = ([k for k in ktail.getUniqueStatesSample])
             if len( destState['values'])>0:
@@ -413,8 +416,9 @@ def generateSampleAutomata():
             else:
                 pass
             
+            
             sampleTransition=ktail.sampleTransitionmapping
-            listBoxTop.delete(0,END)
+            
             for k,v in sampleTransition.items():
                 p,q=k
                 listBoxTop.insert(END,str(p)+'-->'+str(v)+'[label='+q+']')
@@ -620,12 +624,20 @@ def loadStatsLogToTextBox(k,lst,flag):
             for k,v  in sampleTransitionmapping.items():
                 p,q=k
                 statsPad.insert(END,str(p)+'--->'+str(v)+'[label='+q+']\n')
-            
-            alphabet=ktail.alphabet
-            print 'Alphabet from sample: ' + str( alphabet)
-            statsPad.insert(END,'Alphabet from sample: ' + str( alphabet)+'\n')
-            d=DFA(getUniqueStatesSample, alphabet,sampleTransitionmapping,start_state,accept_states,1);
+                
+          
+            #alphabet=[]
+            #for c in ktail.samplealphabet:
+            #    alphabet.append(c)
+                
+            print 'Alphabet from sample: ' + str( ktail.samplealphabet)
+            statsPad.insert(END,'Alphabet from sample: ' + str(ktail.samplealphabet)+'\n')
+            d=DFA(getUniqueStatesSample, ktail.samplealphabet,sampleTransitionmapping,start_state,accept_states,1);
             alphabetfromtrace=kTailFSMGraph.alphabetfromtrace
+            
+            if len(ktail.samplealphabet)==0:
+                tkMessageBox.showwarning("Process Sample", "Please proccess the sample automata first")
+                return
             
             testalphabet=[]
             for k,v in alphabetfromtrace.items():
