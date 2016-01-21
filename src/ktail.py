@@ -65,7 +65,7 @@ def get_num(x):
     return (''.join(ele for ele in x if ele.isdigit()))
 
 getUniqueStatesSample=set()
-alphabet=set()
+alphabet=[]
 transDictSample={}
 sampleTransitionmapping={} 
 
@@ -244,10 +244,11 @@ class kTails():
         #    print 'Trace 2:Merged States  ' + str(kTails.mergedlist2)    
         print '***********************************************************************************************************************************************************************************'
 
-        print 'old values'
-        print 'unique states: ' + str(getUniqueStatesSample)
+        #print 'old values'
+        #print 'unique states: ' + str(getUniqueStatesSample)
         #print 'Aplhabet: ' + str(alphabet)
-        print 'Transition Map: ' + str(sampleTransitionmapping)
+        #print 'Transition Map: ' + str(sampleTransitionmapping)
+        
         if flag==0:
             getUniqueStatesSample.clear()
             #alphabet.clear()
@@ -257,13 +258,7 @@ class kTails():
                 getUniqueStatesSample.add(int(val1))
             print 'Unique States in Sample Trace: ' + str(getUniqueStatesSample)
         
-            #for g in getUniqueStatesSample:
-            #    for tmpk,tmpv in tmpDict.items():
-            #        if g==tmpk:
-            #            alphabet={tmpv}
-            #print 'Alphabet in Sample Trace:' + str(alphabet)
-            
-                            
+                         
             current = None
             nxt = None
             index=0
@@ -278,10 +273,9 @@ class kTails():
                                 
             print 'Sample Transition Mapping:' + str(sampleTransitionmapping)
             
-            #alphabet.clear()
             for k in sampleTransitionmapping.iterkeys():
                 p,q=k
-                alphabet.add(q)
+                alphabet.append(q)
             print 'Alphabet in Sample Trace:' + str(alphabet)
         else:
             for val1 in kTails.mergedlist:
@@ -292,35 +286,40 @@ class kTails():
             for g in kTails.getUniqueStates1:
                 for tmpk,tmpv in tmpDict.items():
                     if g==tmpk:
-                       
                         kTails.transDict1[g]=tmpv
-            
+            alpha=OrderedDict()
+            alphabet[:]
+            for k,v in kTails.transDict1.items():
+                alphabet.append(v)
+                
+            print 'Alphabet in Input Trace:' + str(alphabet)
             
         kTails.mapping=transitionMapping(kTails.mergedlist)
         
-        
         print '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
         
-        
         kTailG=kTailFSMGraph('FSM')
-            #kTailG.generateStateTransition(kTails.mergedlist,tmpDict,stateAliasMapList,0)
+        #kTailG.generateStateTransition(kTails.mergedlist,tmpDict,stateAliasMapList,0)
         if flag==0:
             kTailG.generateStateTransition(kTails.mergedlist,tmpDict,'sample')
-        else:
+        elif flag==1:
             kTailG.generateStateTransition(kTails.mergedlist,tmpDict,'ktail')
-        #except (ValueError,AttributeError,EnvironmentError,TypeError):
-         #   tkMessageBox("Error","An error occured while processing the ktail FSM")
+        
         tmpDict.clear() #clear the contents the tmp dictionary for processing different set of inputs
+        
     if __name__ == "__main__":
         pass
     
 class kTailFSMGraph(object):
     mapping=[]
     stateMap={}
+    sampleStatemap={}
     transDict={}
     getUniqueStates = set()
     alphabetfromtrace=OrderedDict()
+    samplendfaloginfor=[]
     ndfaloginfor=[]
+    accepting_states=set()
     def __init__(self, params):
         pass
         '''
@@ -330,9 +329,9 @@ class kTailFSMGraph(object):
         self.mapping=[]
         return self.mapping
     
-    def stateMap(self):
-        self.stateMap={}
-        return self.stateMap
+    #def stateMap(self):
+    #    self.stateMap={}
+    #    return self.stateMap
     
     def transDict(self):
         self.transDict={}
@@ -343,35 +342,30 @@ class kTailFSMGraph(object):
         return self.getUniqueStates
     
     def duplicate_dictionary_check(self,statemap,specific_word=''):
-            initial_state=None
-            next_states=set()
-            label=''
-            for k,d in statemap.items():
-                for key_a in d:
-                    for key_b in d:
-                        if key_a == key_b:
-                            break
-                        for item in d[key_a]:
-                            if (item in d[key_b]):
-                                if specific_word:
-                                    if specific_word == item:
-                                        next_states.add(key_a)
-                                        next_states.add(key_b)
-                                        label=item
-                                        initial_state=k
-                                        print 'Non-Deterministic Path detected at State: '+str(initial_state) + \
-                                        ' [Label='+label +'] Next Transitions States:['+str(next_states)+']'
-                                        
-                                        kTailFSMGraph.ndfaloginfor.append('Non-Deterministic Path detected at State: '+str(initial_state) + \
-                                        ' [Label='+label +'] Next Transitions States:['+str(next_states)+']')
-                                
-                                
-                                
-                            #break
-                        
-            #return 'Non-Deterministic Path detected at State: '+str(initial_state) + \
-                                ' [Label='+label +'] Next Transitions States:['+str(next_states)+']'
-    #def generateStateTransition(self,loadEquiState,tmpDictx,stateAliasList,status):
+        initial_state=None
+        next_states=set()
+        label=''
+        #Not that in this function, we only check for the minimal existence
+        #of NDFA with a state having two transitions with same label which makes the automata non-deterministic.
+        #There could be more than one NDFA transitions for a single.
+       
+        for k,d in statemap.items(): #embedded dictionary havig value (d) as an embedded dictionary
+            for key_a,value_a in d.items():
+                for key_b,value_b in d.items():
+                    if key_a == key_b:
+                        break
+                    if (value_a==value_b):
+                        if specific_word:
+                            if str(specific_word) == str(value_a):
+                                next_states.add(key_a)
+                                next_states.add(key_b)
+                                label=value_a
+                                initial_state=k
+                                return 'Non-Deterministic Path detected at State: '+str(initial_state) + \
+                                        ' [Label='+label +'] Next Transitions States:['+str(next_states)+'] Please check the log for details'
+                                    
+        return
+
     def generateStateTransition(self,loadEquiState,tmpDictx,dotFile):
         ktailx=loadEquiState
         
@@ -385,7 +379,8 @@ class kTailFSMGraph(object):
             kTailFSMGraph.getUniqueStates.add(val)
         
         print 'unique states'+ str(kTailFSMGraph.getUniqueStates)
-        #Dictionary to keed track of the state and its assocated transition labels
+        
+        #Dictionary to keep track of the state and its assocated transition labels
         kTailFSMGraph.transDict={}
         for g in kTailFSMGraph.getUniqueStates:
             for tmpk,tmpv in tmpDictx.items():
@@ -396,6 +391,7 @@ class kTailFSMGraph(object):
         
         #Create a list of mapping combinations identified from the state merged list
         #Example: [0,1,1,3,4] ==>[0-->1,1-->1,1-->3,3-->4]
+        
         current = None
         nxt = None
         index=0
@@ -411,31 +407,78 @@ class kTailFSMGraph(object):
         #This dictionary stores transition of each state
         #A state may have multiple transitions.
         #Example: State 0: may have a or more transitions to itself and another transition to other state
+        
         kTailFSMGraph.stateMap={}
+        kTailFSMGraph.sampleStatemap={}
         print kTailFSMGraph.transDict
         for td,tv in kTailFSMGraph.transDict.items():
             #Intialize the embedded dictionary with empty string for each state
-            kTailFSMGraph.stateMap[td]={} #The embedded dictionary stores the next transition state with the 
-                    #transition label as the key.
+            if dotFile=='sample':
+                kTailFSMGraph.sampleStatemap[td]={}
+            elif dotFile=='ktail':
+                kTailFSMGraph.stateMap[td]={} #The embedded dictionary stores the next transition state with the transition label as the key.
+            
         for z in kTailFSMGraph.getUniqueStates:
             for e,f in kTailFSMGraph.transDict.items():
                 if z==e:
                     for m in kTailFSMGraph.mapping:
                         st=[int(s) for s in m.split('-->') if s.isdigit()] #extract digits in a mapping entry
                         if str(z)==str(st[0]) and str(z)==str(st[1]):
-                            kTailFSMGraph.stateMap[z][int(st[0])]=f
+                            if dotFile=='sample':
+                                kTailFSMGraph.sampleStatemap[z][int(st[0])]=f
+                            else:
+                                kTailFSMGraph.stateMap[z][int(st[0])]=f
                             #Check if the transition from the current node
                             #to the next node is the same as the self-transition on current node
                             #If so then we assign and arbitrary label-as it might cause non-deterministic fsm
                         elif str(z)!=str(st[1]) and str(z)==str(st[0]):
-                            kTailFSMGraph.stateMap[z][int(st[1])]=f
+                            if dotFile=='sample':
+                                kTailFSMGraph.sampleStatemap[z][int(st[1])]=f
+                            else:
+                                kTailFSMGraph.stateMap[z][int(st[1])]=f
                             
-        print 'statemap'+str(kTailFSMGraph.stateMap)
-               
+        print 'Test Input Trace Map'+str(kTailFSMGraph.stateMap)
+        print 'Sample Input Trace Map'+str(kTailFSMGraph.sampleStatemap)
+        
+        #Look for non-determistic paths in the traces for the sample input.
+        
+        if dotFile=='sample':
+            print 'Checking for non-deterministic paths in Sample Trace Automata:'
+            kTailFSMGraph.samplendfaloginfor.append('Checking for non-deterministic paths in Sample Trace Automata:')
+            for k,v in kTailFSMGraph.transDict.items():
+                if self.duplicate_dictionary_check(kTailFSMGraph.sampleStatemap,str(v))==None:
+                    pass
+                else:
+                    kTailFSMGraph.samplendfaloginfor.append('==>'+str(self.duplicate_dictionary_check(kTailFSMGraph.sampleStatemap,str(v))))
+                    print self.duplicate_dictionary_check(kTailFSMGraph.sampleStatemap,str(v))
+                    tkMessageBox.showinfo("Non-deterministic FA", self.duplicate_dictionary_check(kTailFSMGraph.sampleStatemap,str(v)))
+        elif dotFile=='ktail':
+            print 'Checking for non-deterministic paths in Input Trace Automata:'
+            kTailFSMGraph.ndfaloginfor.append('Checking for non-deterministic paths in Input Trace Automata:')
+            #print 'alpa'+str(alphabet)
+            for k,v in kTailFSMGraph.transDict.items():
+                #print self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v))
+                if self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v))==None:
+                    pass
+                else:
+                    kTailFSMGraph.ndfaloginfor.append('==>'+str(self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v))))
+                    print self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v))
+                    tkMessageBox.showinfo("Non-deterministic FA", self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v)))
+                    
+            
         #Here we appy the state transitions to create a finite state machine
-        ktail = FiniteStateMachine('K-TAIL')
+        
+        ktailFSM = FiniteStateMachine('K-TAIL')
         kTailFSMGraph.alphabetfromtrace.clear()
-        for nx,kvx in kTailFSMGraph.stateMap.items():
+        tmpstateMap={}
+        
+        #make a shallow copy of the state map dictionaries
+        if dotFile=='sample':
+            tmpstateMap=kTailFSMGraph.sampleStatemap.copy() 
+        elif dotFile=='ktail':
+            tmpstateMap=kTailFSMGraph.stateMap.copy()
+            
+        for nx,kvx in tmpstateMap.items():
                 #n=[State(s) for s in list(getUniqueStates)]
                 for c in kvx:
                     State(nx).update({kvx[c]:State(c)})
@@ -444,15 +487,21 @@ class kTailFSMGraph(object):
                 #Define initial state    
                 if nx==0:
                     nx=State(0, initial=True)
-        
+                #Define acceptings states for the state machine
+                if dotFile=='sample':
+                    for a in kTailFSMGraph.accepting_states:
+                        if a==nx:
+                            nx=State(a,accepting=True)
+        #clear the the tmp states map after the operation
+        tmpstateMap.clear()
         #Create a state machine
+        
         print '------------------------------------------------------------------------------------'
-        #Check if there is existing graph data 
+        
         try:                
-            graph=get_graph(ktail)
-            if graph!=None:
+            graph=get_graph(ktailFSM)
+            if graph!=None:#Check if there is existing graph data 
                 graph.draw('../graph/'+dotFile+'.png', prog='dot')
-                #print graph
             else:
                 pass
         except GraphvizError:
