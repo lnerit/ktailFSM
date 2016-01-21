@@ -562,10 +562,6 @@ def loadStatsLogToTextBox(k,lst,flag):
         statsPad.insert(END,'Finalised States in Trace 1: '+ str(kt.getUniqueStates1)+'\n')
         statsPad.insert(END,'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
         
-        #statsPad.insert(END,'Mapping in Trace 1: ' +str(kt.mapping) +'\n')
-        #statsPad.insert(END,'State Map in Trace 1: '+str(ktfsm.stateMap) +'\n')
-        #statsPad.insert(END,'-----------------------------------------------------------------------------------------------------------------------------------\n')
-        #statsPad.insert(END,'Finalised States: '+ str(kTailFSMGraph.getUniqueStates)+'\n')
         statsPad.insert(END,'State-Label in Trace 1: '+ str(kTailFSMGraph.transDict)+'\n')
         statsPad.insert(END,'State Transitions:-----------------------------------------------------------------------------------------------------------------\n')
         symbol=set()
@@ -573,10 +569,16 @@ def loadStatsLogToTextBox(k,lst,flag):
                 for c in kvx:
                     statsPad.insert(END,str(nx) + '-->'+str(c) + '[label='+kvx[c] +']\n')
                     symbol.add(kvx[c])
-        for d in symbol:
-            ktfsm.duplicate_dictionary_check(ktfsm.stateMap,d)
+        
+        for ndfa in  ktfsm.samplendfaloginfor:   
+            statsPad.insert(END,ndfa+'\n')
+            
         for ndfa in  ktfsm.ndfaloginfor:   
             statsPad.insert(END,ndfa+'\n')
+            
+        #reset the log lists
+        #ktfsm.samplendfaloginfor[:]
+        #ktfsm.ndfaloginfor[:]
         
         statsPad.insert(END,'***********************************************************************************************************************************\n')
         
