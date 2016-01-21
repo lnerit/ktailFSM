@@ -65,7 +65,8 @@ def get_num(x):
     return (''.join(ele for ele in x if ele.isdigit()))
 
 getUniqueStatesSample=set()
-alphabet=[]
+
+samplealphabet=set()
 transDictSample={}
 sampleTransitionmapping={} 
 
@@ -76,7 +77,7 @@ class kTails():
     '''
     #trace=['A','B','C','A','B','C','A','B','C','A','B','C']
     k=3 # set default value to 3  but overwritten with user input
-
+    alphabet=[]
     def __init__(self, params):
         self.log=logging.getLogger('ktail.py')
         pass
@@ -249,7 +250,7 @@ class kTails():
         #print 'unique states: ' + str(getUniqueStatesSample)
         #print 'Aplhabet: ' + str(alphabet)
         #print 'Transition Map: ' + str(sampleTransitionmapping)
-        
+        kTails.alphabet=[]
         if flag==0:
             getUniqueStatesSample.clear()
             #alphabet.clear()
@@ -274,10 +275,17 @@ class kTails():
                                 
             print 'Sample Transition Mapping:' + str(sampleTransitionmapping)
             
+            #alphabet.clear()#clear any existing alphabets in the list
+            samplealphabet.clear()
+            
             for k in sampleTransitionmapping.iterkeys():
                 p,q=k
-                alphabet.append(q)
-            print 'Alphabet in Sample Trace:' + str(alphabet)
+                kTails.alphabet.append(q)
+            #Do a shallow copy of the alphabet and store it in separate set for comparing with actual input alphabet
+            for e in kTails.alphabet:
+                samplealphabet.add(e)
+                
+            print 'Alphabet in Sample Trace:' + str(samplealphabet)
         else:
             for val1 in kTails.mergedlist:
                 kTails.getUniqueStates1.add(int(val1))
@@ -289,11 +297,11 @@ class kTails():
                     if g==tmpk:
                         kTails.transDict1[g]=tmpv
 
-            alphabet[:]
+            
             for k,v in kTails.transDict1.items():
-                alphabet.append(v)
+                kTails.alphabet.append(v)
                 
-            print 'Alphabet in Input Trace:' + str(alphabet)
+            print 'Alphabet in Input Trace:' + str(kTails.alphabet)
             
         kTails.mapping=transitionMapping(kTails.mergedlist)
         
