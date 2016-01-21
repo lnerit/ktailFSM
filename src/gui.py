@@ -570,15 +570,16 @@ def loadStatsLogToTextBox(k,lst,flag):
                     statsPad.insert(END,str(nx) + '-->'+str(c) + '[label='+kvx[c] +']\n')
                     symbol.add(kvx[c])
         
-        for ndfa in  ktfsm.samplendfaloginfor:   
-            statsPad.insert(END,ndfa+'\n')
+        #for ndfa in  ktfsm.samplendfaloginfor:   
+        #    statsPad.insert(END,ndfa+'\n')
             
         for ndfa in  ktfsm.ndfaloginfor:   
             statsPad.insert(END,ndfa+'\n')
             
+            
         #reset the log lists
         #ktfsm.samplendfaloginfor[:]
-        #ktfsm.ndfaloginfor[:]
+       
         
         statsPad.insert(END,'***********************************************************************************************************************************\n')
         
