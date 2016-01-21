@@ -164,11 +164,12 @@ class kTails():
         kTails.nodelist=[[]]
         kTails.mergedlist=[]
         kTails.strEquiv=[]
+        
         #Get final unique states from each trace
         kTails.getUniqueStates1=set()
         kTails.transDict1={}
         kTails.mapping={}
-        samplealphabet=set()
+        #samplealphabet=set()
 
         #kTails.stateMap2={}
         #isMultitrace=False 
@@ -287,7 +288,7 @@ class kTails():
                 for tmpk,tmpv in tmpDict.items():
                     if g==tmpk:
                         kTails.transDict1[g]=tmpv
-            alpha=OrderedDict()
+
             alphabet[:]
             for k,v in kTails.transDict1.items():
                 alphabet.append(v)
@@ -363,6 +364,7 @@ class kTailFSMGraph(object):
                                 initial_state=k
                                 return 'Non-Deterministic Path detected at State: '+str(initial_state) + \
                                         ' [Label='+label +'] Next Transitions States:['+str(next_states)+'] Please check the log for details'
+                                
                                     
         return
 
@@ -452,7 +454,9 @@ class kTailFSMGraph(object):
                     kTailFSMGraph.samplendfaloginfor.append('==>'+str(self.duplicate_dictionary_check(kTailFSMGraph.sampleStatemap,str(v))))
                     print self.duplicate_dictionary_check(kTailFSMGraph.sampleStatemap,str(v))
                     tkMessageBox.showinfo("Non-deterministic FA", self.duplicate_dictionary_check(kTailFSMGraph.sampleStatemap,str(v)))
+        
         elif dotFile=='ktail':
+            kTailFSMGraph.ndfaloginfor=[] #re
             print 'Checking for non-deterministic paths in Input Trace Automata:'
             kTailFSMGraph.ndfaloginfor.append('Checking for non-deterministic paths in Input Trace Automata:')
             #print 'alpa'+str(alphabet)
@@ -463,9 +467,9 @@ class kTailFSMGraph(object):
                 else:
                     kTailFSMGraph.ndfaloginfor.append('==>'+str(self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v))))
                     print self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v))
-                    tkMessageBox.showinfo("Non-deterministic FA", self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v)))
+                    #tkMessageBox.showinfo("Non-deterministic FA", self.duplicate_dictionary_check(kTailFSMGraph.stateMap,str(v)))
                     
-            
+           
         #Here we appy the state transitions to create a finite state machine
         
         ktailFSM = FiniteStateMachine('K-TAIL')
