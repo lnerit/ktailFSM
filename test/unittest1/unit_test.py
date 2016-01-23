@@ -4,7 +4,6 @@ Created on 23/01/2016
 @author: lenz
 '''
 import unittest
-from unittest1.calculator import Calculator
 from src.ktail import check_equivalence, kTails, kTailFSMGraph
 from src.dfa import DFA
 
